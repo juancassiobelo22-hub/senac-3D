@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Simulação 3D — Centro de Distribuição Senac Imperatriz</title>
+<style>
+  :root { --azul: #0f1b2d; --azul2: #16263d; --laranja: #f7941d; --texto: #eef2f7; --suave: #a9b6c7; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: var(--azul); color: var(--texto);
+    font-family: "Segoe UI", Inter, Roboto, Arial, sans-serif; -webkit-tap-highlight-color: transparent; }
+  #cena { position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+  button { font: inherit; color: inherit; cursor: pointer; border: 0; }
+  header { position: fixed; top: 0; left: 0; right: 0; display: flex; align-items: center; gap: 12px; padding: 12px 16px;
+    background: linear-gradient(#0f1b2df2, #0f1b2d00); pointer-events: none; z-index: 5; }
+  header h1 { margin: 0; font-size: 17px; line-height: 1.15; font-weight: 800; letter-spacing: .02em; flex: 1; min-width: 0; }
+  header h1 small { display: block; font-size: 11px; font-weight: 600; color: var(--laranja); letter-spacing: .12em; text-transform: uppercase; }
+  .acoes { display: flex; gap: 8px; pointer-events: auto; }
+  .btn { padding: 10px 14px; border-radius: 10px; background: var(--azul2); border: 1px solid #ffffff26; font-weight: 700; font-size: 13px; white-space: nowrap; }
+  .btn.pri { background: var(--laranja); color: #1a1205; border-color: transparent; }
+  .btn:hover { filter: brightness(1.12); }
+  #rotulos { position: fixed; inset: 0; pointer-events: none; z-index: 2; overflow: hidden; }
+  .rotulo { position: absolute; left: 0; top: 0; pointer-events: auto; padding: 5px 10px; border-radius: 999px; background: #0f1b2dd9;
+    border: 1.5px solid var(--laranja); font-size: 12px; font-weight: 700; white-space: nowrap; will-change: transform; }
+  .rotulo.ativo, .rotulo:hover { background: var(--laranja); color: #1a1205; }
+  #lista { position: fixed; left: 16px; top: 76px; display: flex; flex-direction: column; gap: 6px; z-index: 4; }
+  .chip { display: flex; align-items: center; gap: 8px; padding: 8px 12px 8px 8px; border-radius: 10px; background: #0f1b2de0;
+    border: 1px solid #ffffff1f; font-size: 13px; font-weight: 600; text-align: left; white-space: nowrap; }
+  .chip i { font-style: normal; width: 22px; height: 22px; border-radius: 50%; background: var(--laranja); color: #1a1205; display: grid; place-items: center; font-size: 12px; font-weight: 800; flex: none; }
+  .chip.ativo { background: var(--laranja); color: #1a1205; } .chip.ativo i { background: #1a1205; color: var(--laranja); }
+  #painel { position: fixed; right: 16px; bottom: 16px; width: min(380px, calc(100vw - 32px)); padding: 18px 18px 14px; border-radius: 16px;
+    background: #0f1b2df2; border: 1px solid #ffffff26; border-left: 5px solid var(--laranja); z-index: 6;
+    transform: translateY(calc(100% + 24px)); transition: transform .35s ease; box-shadow: 0 12px 40px #0008; }
+  #painel.aberto { transform: none; }
+  #p-etapa { font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--laranja); }
+  #p-titulo { margin: 4px 28px 6px 0; font-size: 22px; font-weight: 800; line-height: 1.1; }
+  #p-resumo { margin: 0 0 8px; font-weight: 700; font-size: 14px; }
+  #p-texto { margin: 0; font-size: 14px; line-height: 1.5; color: var(--suave); }
+  #p-fechar { position: absolute; top: 10px; right: 10px; width: 32px; height: 32px; border-radius: 8px; background: transparent; font-size: 20px; color: var(--suave); }
+  #tour { display: none; align-items: center; gap: 8px; margin-top: 12px; }
+  .em-tour #tour { display: flex; }
+  #tour .trilho { flex: 1; height: 4px; border-radius: 4px; background: #ffffff22; overflow: hidden; }
+  #barra { height: 100%; width: 0; background: var(--laranja); }
+  #tour button { width: 36px; height: 32px; border-radius: 8px; background: var(--azul2); border: 1px solid #ffffff26; font-weight: 800; }
+  #dica { position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%); padding: 9px 14px; border-radius: 999px; background: #0f1b2de6;
+    border: 1px solid #ffffff26; font-size: 12.5px; color: var(--suave); z-index: 3; transition: opacity .4s; white-space: nowrap; pointer-events: none; }
+  #dica.oculta { opacity: 0; }
+  #dica .toque { display: none; }
+  @media (hover: none), (max-width: 760px) { #dica .mouse { display: none; } #dica .toque { display: inline; } }
+  @media (max-width: 760px) {
+    header { padding: 10px 12px; } header h1 { font-size: 14px; } header h1 small { font-size: 9.5px; }
+    .btn { padding: 9px 10px; font-size: 12px; }
+    #lista { top: auto; left: 0; right: 0; bottom: 0; flex-direction: row; overflow-x: auto; padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+      background: linear-gradient(#0f1b2d00, #0f1b2df2 40%); scrollbar-width: none; }
+    #lista::-webkit-scrollbar { display: none; }
+    #painel { right: 10px; left: 10px; width: auto; bottom: 62px; padding: 14px 14px 12px; }
+    #p-titulo { font-size: 18px; } #p-texto, #p-resumo { font-size: 13px; }
+    #dica { bottom: 66px; font-size: 11.5px; }
+    .rotulo { font-size: 10.5px; padding: 4px 8px; }
+  }
+</style>
+</head>
+<body>
+<canvas id="cena"></canvas>
+<div id="rotulos"></div>
+<header>
+  <h1><small>Simulação 3D interativa</small>Centro de Distribuição — Senac Imperatriz</h1>
+  <div class="acoes">
+    <button class="btn" id="btn-geral">Visão geral</button>
+    <button class="btn pri" id="btn-tour">▶ Tour do fluxo</button>
+  </div>
+</header>
+<nav id="lista" aria-label="Áreas do CD"></nav>
+<aside id="painel" aria-live="polite">
+  <button id="p-fechar" aria-label="Fechar">×</button>
+  <div id="p-etapa"></div>
+  <h2 id="p-titulo"></h2>
+  <p id="p-resumo"></p>
+  <p id="p-texto"></p>
+  <div id="tour"><button id="t-ant" aria-label="Etapa anterior">‹</button><div class="trilho"><div id="barra"></div></div><button id="t-prox" aria-label="Próxima etapa">›</button></div>
+</aside>
+<div id="dica"><span class="mouse">Arraste para girar · Scroll para zoom · Botão direito para mover · Clique numa área</span><span class="toque">Arraste para girar · Pinça para zoom · Toque numa área</span></div>
+<script>/*BUNDLE*/</script>
+</body>
+</html>
