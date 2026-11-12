@@ -40,6 +40,7 @@
   #p-conceitos, .lst { margin: 0; padding-left: 18px; font-size: 13px; line-height: 1.45; color: var(--texto); }
   #p-conceitos li, .lst li { margin-bottom: 4px; } #p-conceitos li::marker, .lst li::marker { color: var(--laranja); }
   #painel { max-height: calc(100vh - 100px); overflow-y: auto; }
+  #painel.info h3, #painel.info #p-conceitos, #painel.info #tour, #painel.info #p-resumo { display: none; }
   #p-fechar { position: absolute; top: 10px; right: 10px; width: 32px; height: 32px; border-radius: 8px; background: transparent; font-size: 20px; color: var(--suave); }
   #tour { display: none; align-items: center; gap: 8px; margin-top: 12px; }
   .em-tour #tour { display: flex; }
@@ -95,7 +96,7 @@
   <div id="tour"><button id="t-ant" aria-label="Etapa anterior">‹</button><div class="trilho"><div id="barra"></div></div><button id="t-prox" aria-label="Próxima etapa">›</button></div>
 </aside>
 <div id="joy"><div id="joy-p"></div></div>
-<div id="dica-andar"><span class="mouse">W A S D ou setas para andar · Arraste o mouse para olhar · Shift corre · Esc sai</span><span class="toque">Lado esquerdo: andar · Lado direito: olhar</span></div>
+<div id="dica-andar"><span class="mouse">W A S D ou setas para andar · Arraste para olhar · Clique nos totens ⓘ para ver a explicação · Esc sai</span><span class="toque">Esquerda: andar · Direita: olhar · Toque nos totens ⓘ</span></div>
 <div id="dica"><span class="mouse">Arraste para girar · Scroll para zoom · Botão direito para mover · Clique numa área</span><span class="toque">Arraste para girar · Pinça para zoom · Toque numa área</span></div>
 <script>/*BUNDLE*/</script>
 </body>

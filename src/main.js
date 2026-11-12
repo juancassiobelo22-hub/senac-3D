@@ -486,6 +486,7 @@ carga.visible = false; scene.add(carga);
 // zonas clicáveis (invisíveis)
 const alvos = ZONAS.map(z => { const m = new THREE.Mesh(new THREE.BoxGeometry(z.x1 - z.x0, 4, z.z1 - z.z0), new THREE.MeshBasicMaterial({ visible: false })); m.position.set(z.cx, 2, z.cz); m.userData.zona = z; scene.add(m); return m; });
 
+const raio = new THREE.Raycaster(), pt = new THREE.Vector2();
 // ---------- Interface ----------
 const $ = id => document.getElementById(id);
 const elRotulos = $('rotulos'), elLista = $('lista'), elPainel = $('painel');
@@ -498,6 +499,7 @@ let voo = null, selecionada = null, tour = null;
 function voar(pos, alvo, dur = 1.3) { voo = { p0: camera.position.clone(), a0: controls.target.clone(), p1: pos.clone(), a1: alvo.clone(), t: 0, dur }; }
 function selecionar(id, doTour = false) {
   if (andar) sairAndar();
+  elPainel.classList.remove('info');
   if (!doTour && tour) pararTour();
   const z = zonaPorId[id]; selecionada = z;
   const d = 13 + z.tam * 0.95;
@@ -526,7 +528,7 @@ function pararTour() { tour = null; carga.visible = false; document.body.classLi
 $('btn-tour').onclick = () => tour ? pararTour() : iniciarTour();
 $('btn-geral').onclick = visaoGeral;
 $('btn-entorno').onclick = () => { visaoGeral(); voar(new THREE.Vector3(30, 190, 215), new THREE.Vector3(30, 0, -30), 1.8); };
-$('p-fechar').onclick = visaoGeral;
+$('p-fechar').onclick = () => andar ? elPainel.classList.remove('aberto') : visaoGeral();
 $('t-ant').onclick = () => tour && irEtapa((tour.i + FLUXO.length - 1) % FLUXO.length);
 $('t-prox').onclick = () => tour && irEtapa((tour.i + 1) % FLUXO.length);
 controls.addEventListener('start', () => { voo = null; $('dica').classList.add('oculta'); });
@@ -565,6 +567,24 @@ const teto = new THREE.Group(); teto.visible = false; scene.add(teto);
   for (let x = -24; x <= 24; x += 12) for (const z of [-12, -2, 8]) { barra(x, yTopo(z), z, x, 5.9, z, 0.03); const c = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.45, 0.35, 12), mat(0x30353b, { metalness: 0.6 })); c.position.set(x, 5.85, z); teto.add(c); const l = new THREE.Mesh(new THREE.CircleGeometry(0.42, 12), lum); l.rotation.x = Math.PI / 2; l.position.set(x, 5.67, z); teto.add(l); }
 }
 
+const PONTOS = [[-17.3, 2.6, "Porta-paletes seletivo", "Estrutura de armazenagem", "Estante metálica onde cada palete ocupa uma posição com endereço próprio. As longarinas laranjas sustentam os paletes e os montantes azuis levam o peso até o piso. Sempre respeite a placa de capacidade de carga por nível."], [-13.9, 2.6, "Endereçamento", "Rua · módulo · nível · posição", "As placas amarelas identificam cada rua. O endereço completo diz exatamente onde o palete está, por exemplo: Rua B, módulo 03, nível 2. É o que permite ao WMS mandar o operador direto ao lugar certo."], [3.9, -4, "Armazenagem blocada", "Paletes direto no chão", "Paletes empilhados uns sobre os outros, sem estante. Custa pouco e ocupa bem o espaço, mas só dá acesso ao palete da frente e de cima. Indicada para muito volume do mesmo produto e alto giro."], [-0.2, -1.6, "Palete PBR", "Unidade de movimentação", "Base de madeira padrão brasileiro de 1,00 m x 1,20 m. A carga é unitizada sobre ele (várias caixas viram um volume só), o que agiliza a movimentação com empilhadeira e paleteira."], [-22.4, -3.6, "Doca e rampa niveladora", "Descarga", "O caminhão encosta de ré e é travado com calços nas rodas. A rampa amarela nivela a diferença de altura entre o baú e o piso para a paleteira entrar com segurança."], [-26.2, 2.4, "Área de staging", "Aguardando conferência", "Espaço demarcado onde a carga descarregada espera a conferência. Enquanto está aqui, a mercadoria ainda não faz parte do estoque."], [-19.6, 2.2, "Paleteira manual", "Equipamento de movimentação", "Usada para deslocar paletes em distâncias curtas no nível do chão. Não eleva a carga em altura: para isso existe a empilhadeira."], [-16.6, 4.6, "Empilhadeira", "NR-11", "Movimenta e eleva paletes até os níveis altos do porta-paletes. Só pode ser operada por pessoa habilitada e treinada conforme a NR-11. Sinal luminoso ligado e circulação apenas nas rotas demarcadas."], [1.9, -14.3, "Posto de conferência", "Recebimento", "Aqui a carga física é comparada com a nota fiscal e o pedido de compra. Na conferência cega, o conferente conta sem ver a quantidade da nota. Depois vem a etiqueta e a entrada no WMS."], [4.7, -9.6, "Avarias e quarentena", "Produto não conforme", "Embalagem rasgada, validade curta ou divergência com a nota: o produto fica segregado nesta área vermelha até a decisão de devolver, trocar ou descartar. Nunca se mistura ao estoque bom."], [8.6, -9.5, "Bancada de picking", "Separação de pedidos", "O operador reúne os itens de cada pedido seguindo a lista de separação ou o coletor de dados. Erro aqui vira entrega errada, por isso a acuracidade é o indicador principal desta área."], [9.3, -13.3, "Estante de picking", "Flow de separação", "Prateleiras baixas com os produtos ao alcance da mão. São reabastecidas a partir do estoque do porta-paletes (ressuprimento) sempre que o nível mínimo é atingido."], [9.4, 2.4, "Expedição", "Conferência e consolidação", "Os volumes separados são conferidos de novo, embalados, etiquetados e agrupados por rota. Daqui saem com nota fiscal e romaneio de carga."], [22.4, -3.6, "Carregamento", "Doca de saída", "A carga entra no caminhão na ordem inversa das entregas: o último cliente da rota é carregado primeiro. Depois o baú é conferido e lacrado."], [28.6, -2.6, "Extintor de incêndio", "Segurança", "Fica em local visível, com placa na parede e área demarcada em vermelho no piso, que deve estar sempre livre. Nada pode ser armazenado na frente dele."], [6.4, -2.6, "Faixa de pedestres", "Segurança", "Faixa verde exclusiva para quem está a pé, separada da rota das empilhadeiras. Na zebra branca o pedestre atravessa a rota das máquinas com atenção redobrada."], [-4, 3.2, "Cross-docking", "Fluxo direto", "A linha tracejada azul marca o caminho da carga que não é armazenada: chega na doca de entrada e segue direto para a expedição. Reduz estoque e tempo de permanência."], [0.4, 3.9, "Administração e WMS", "Gestão", "Sala de onde se controla o estoque, as notas fiscais e os indicadores. O WMS registra cada movimentação e orienta as tarefas dos operadores."], [-3, -8.4, "Cobertura do galpão", "Estrutura", "Olhe para cima: tesouras metálicas, telha translúcida para luz natural, sprinklers na tubulação vermelha e eletrocalhas. O pé-direito alto é o que permite verticalizar o estoque."]];
+// ---------- Pontos de informação (totens de sinalização, só no modo andar) ----------
+const pontos = new THREE.Group(); pontos.visible = false; scene.add(pontos); const alvosInfo = [];
+{
+  const c = document.createElement('canvas'); c.width = c.height = 128; const g = c.getContext('2d');
+  g.fillStyle = '#12356b'; g.beginPath(); g.arc(64, 64, 62, 0, 7); g.fill(); g.fillStyle = '#f7941d'; g.beginPath(); g.arc(64, 64, 52, 0, 7); g.fill();
+  g.fillStyle = '#12356b'; g.font = '900 84px Georgia, serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('i', 64, 70);
+  const tx = new THREE.CanvasTexture(c); tx.colorSpace = THREE.SRGBColorSpace;
+  PONTOS.forEach(([x, z, titulo, sub, texto]) => {
+    const t = new THREE.Group();
+    for (let i = 0; i < 3; i++) caixa(0.34, 0.07, 0.34, i % 2 ? COR.escuro : COR.amarelo, 0, i * 0.07, 0, t);   // base zebrada
+    cilindro(0.035, 1.15, COR.azulEsc, 0, 0.2, 0, t);
+    const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tx })); sp.scale.setScalar(0.5); sp.position.y = 1.55; sp.userData.info = { titulo, sub, texto }; t.add(sp); alvosInfo.push(sp);
+    t.position.set(x, 0, z); pontos.add(t);
+  });
+}
+function mostrarInfo(i) { $('p-etapa').textContent = i.sub; $('p-titulo').textContent = i.titulo; $('p-resumo').textContent = ''; $('p-texto').textContent = i.texto; $('p-tipo-box').style.display = 'none'; elPainel.classList.add('info', 'aberto'); elPainel.scrollTop = 0; }
+
 // ---------- Modo andar (primeira pessoa) ----------
 let andar = null; const teclas = new Set();
 const OBST = [[-16.55, -14.65], [-13.35, -11.45], [-10.15, -8.25], [-6.95, -5.05]].map(([a, b]) => [a, b, -13.9, 1.9]).concat([[-25.8, -22.7, -16.6, -4.5], [23.4, 26.6, -16.6, -4.5]]);
@@ -573,10 +593,10 @@ function entrarAndar() {
   if (tour) pararTour(); voo = null; selecionada = null; elPainel.classList.remove('aberto');
   ZONAS.forEach(o => { o.chip.classList.remove('ativo'); o.rotulo.classList.remove('ativo'); });
   andar = { x: 0, z: 3.6, yaw: 0, pitch: -0.05, olhar: null, joy: null, mv: { x: 0, y: 0 } };
-  teto.visible = true; controls.enabled = false; camera.rotation.order = 'YXZ'; document.body.classList.add('andando'); $('btn-andar').textContent = '✕ Sair'; $('dica').classList.add('oculta'); ajustar();
+  teto.visible = pontos.visible = true; controls.enabled = false; camera.rotation.order = 'YXZ'; document.body.classList.add('andando'); $('btn-andar').textContent = '✕ Sair'; $('dica').classList.add('oculta'); ajustar();
 }
 function sairAndar() {
-  andar = null; teto.visible = false; controls.enabled = true; camera.rotation.order = 'XYZ'; document.body.classList.remove('andando'); $('btn-andar').textContent = '🚶 Andar'; $('joy').style.display = 'none'; ajustar();
+  andar = null; teto.visible = pontos.visible = false; elPainel.classList.remove('info', 'aberto'); controls.enabled = true; camera.rotation.order = 'XYZ'; document.body.classList.remove('andando'); $('btn-andar').textContent = '🚶 Andar'; $('joy').style.display = 'none'; ajustar();
   camera.position.copy(VISAO_GERAL.pos); controls.target.copy(VISAO_GERAL.alvo);
 }
 $('btn-andar').onclick = () => andar ? (sairAndar()) : entrarAndar();
@@ -585,11 +605,16 @@ window.addEventListener('keyup', e => teclas.delete(e.key.toLowerCase()));
 window.addEventListener('blur', () => teclas.clear());
 canvas.addEventListener('pointerdown', e => { if (!andar) return; canvas.setPointerCapture(e.pointerId);
   if (e.pointerType === 'touch' && e.clientX < window.innerWidth / 2 && !andar.joy) { andar.joy = { id: e.pointerId, x: e.clientX, y: e.clientY }; const j = $('joy'); j.style.display = 'block'; j.style.left = e.clientX + 'px'; j.style.top = e.clientY + 'px'; $('joy-p').style.transform = 'translate(-50%,-50%)'; }
-  else if (!andar.olhar) andar.olhar = { id: e.pointerId, x: e.clientX, y: e.clientY }; });
+  else if (!andar.olhar) andar.olhar = { id: e.pointerId, x: e.clientX, y: e.clientY, x0: e.clientX, y0: e.clientY }; });
 canvas.addEventListener('pointermove', e => { if (!andar) return;
   if (andar.joy && e.pointerId === andar.joy.id) { let dx = (e.clientX - andar.joy.x) / 50, dy = (e.clientY - andar.joy.y) / 50; const l = Math.hypot(dx, dy); if (l > 1) { dx /= l; dy /= l; } andar.mv = { x: dx, y: dy }; $('joy-p').style.transform = `translate(-50%,-50%) translate(${dx * 40}px,${dy * 40}px)`; }
   else if (andar.olhar && e.pointerId === andar.olhar.id) { andar.yaw -= (e.clientX - andar.olhar.x) * 0.005; andar.pitch = Math.max(-1.2, Math.min(1.2, andar.pitch - (e.clientY - andar.olhar.y) * 0.004)); andar.olhar.x = e.clientX; andar.olhar.y = e.clientY; } });
-const soltar = e => { if (!andar) return; if (andar.joy && e.pointerId === andar.joy.id) { andar.joy = null; andar.mv = { x: 0, y: 0 }; $('joy').style.display = 'none'; } if (andar.olhar && e.pointerId === andar.olhar.id) andar.olhar = null; };
+const soltar = e => { if (!andar) return; if (andar.joy && e.pointerId === andar.joy.id) { andar.joy = null; andar.mv = { x: 0, y: 0 }; $('joy').style.display = 'none'; } if (andar.olhar && e.pointerId === andar.olhar.id) {
+    if (e.type === 'pointerup' && Math.hypot(e.clientX - andar.olhar.x0, e.clientY - andar.olhar.y0) < 8) {   // clique sem arrastar: procura um totem
+      const r = canvas.getBoundingClientRect(); pt.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1); raio.setFromCamera(pt, camera);
+      const h = raio.intersectObjects(alvosInfo)[0]; if (h && h.distance < 30) mostrarInfo(h.object.userData.info); else elPainel.classList.remove('aberto');
+    }
+    andar.olhar = null; } };
 canvas.addEventListener('pointerup', soltar); canvas.addEventListener('pointercancel', soltar);
 function atualizarAndar(dt, T) {
   const t = k => teclas.has(k) ? 1 : 0;
@@ -603,7 +628,7 @@ function atualizarAndar(dt, T) {
 }
 
 // clique / toque nas áreas
-const raio = new THREE.Raycaster(), pt = new THREE.Vector2(); let baixo = null;
+let baixo = null;
 canvas.addEventListener('pointerdown', e => { baixo = { x: e.clientX, y: e.clientY, t: performance.now() }; });
 canvas.addEventListener('pointerup', e => {
   if (andar) return;
@@ -650,7 +675,7 @@ function quadro() {
     $('barra').style.width = Math.min(100, tour.t / DUR_ETAPA * 100) + '%';
     if (tour.t >= DUR_ETAPA) { if (tour.i + 1 < FLUXO.length) irEtapa(tour.i + 1); else { pararTour(); visaoGeral(); } }
   }
-  if (andar) atualizarAndar(dt, T); else controls.update();
+  if (andar) { atualizarAndar(dt, T); const e = 0.5 + Math.sin(T * 3) * 0.05; alvosInfo.forEach(a => { a.scale.setScalar(e); a.position.y = 1.55 + Math.sin(T * 2 + a.parent.position.x) * 0.04; }); } else controls.update();
   // rótulos HTML
   const w = canvas.clientWidth, h = canvas.clientHeight;
   ZONAS.forEach(z => {
