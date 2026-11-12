@@ -30,7 +30,7 @@ const ZONAS = [
   { id: 'administracao', nome: 'Administração', x0: -5, x1: 7, z0: 5, z1: 13.5, etapa: 0,
     resumo: 'Garante a gestão e o suporte de todas as operações.',
     texto: 'A equipe administrativa acompanha estoque, notas fiscais, pessoas e indicadores. É o apoio que mantém todas as outras áreas funcionando.',
-    conceitos: ["WMS: controla endereços, estoque e tarefas do armazém.", "Indicadores (KPIs): acuracidade de estoque, OTIF, produtividade e avarias.", "Gestão de pessoas, treinamentos e escalas.", "Segurança: EPIs e NR-11 para operação de empilhadeiras."] },
+    conceitos: ["WMS: controla endereços, estoque e tarefas do armazém.", "Indicadores (KPIs): acuracidade de estoque, OTIF, produtividade e avarias.", "Gestão de pessoas, treinamentos e escalas.", "Segurança: EPIs e NR-11 para operação de empilhadeiras.", "Sinalização: extintores demarcados no piso, faixa de pedestres separada da rota das empilhadeiras."] },
 ];
 const FLUXO = ['entrada', 'recebimento', 'armazenagem', 'separacao', 'expedicao', 'saida'];
 const zonaPorId = Object.fromEntries(ZONAS.map(z => [z.id, z]));
@@ -46,9 +46,9 @@ renderer.outputColorSpace = THREE.SRGBColorSpace;
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xbfd9ee);
-scene.fog = new THREE.Fog(0xbfd9ee, 120, 260);
+scene.fog = new THREE.Fog(0xbfd9ee, 300, 800);
 
-const camera = new THREE.PerspectiveCamera(42, 1, 0.5, 500);
+const camera = new THREE.PerspectiveCamera(42, 1, 0.5, 1500);
 const VISAO_GERAL = { pos: new THREE.Vector3(0, 52, 62), alvo: new THREE.Vector3(0, 0, 0) };
 camera.position.copy(VISAO_GERAL.pos);
 
@@ -57,7 +57,7 @@ controls.target.copy(VISAO_GERAL.alvo);
 controls.enableDamping = true;
 controls.dampingFactor = 0.08;
 controls.minDistance = 8;
-controls.maxDistance = 150;
+controls.maxDistance = 380;
 controls.maxPolarAngle = Math.PI / 2 - 0.06;
 controls.zoomToCursor = true;
 controls.touches = { ONE: THREE.TOUCH.ROTATE, TWO: THREE.TOUCH.DOLLY_PAN };
@@ -94,12 +94,12 @@ const COR = { azul: 0x1d4f9c, azulEsc: 0x12356b, laranja: 0xf28a1e, amarelo: 0xf
   papelao: 0xc49a62, papelao2: 0xb0844c, madeira: 0x9a7444, cinza: 0x8d949b, escuro: 0x23272e };
 
 // ---------- Terreno ----------
-const chao = new THREE.Mesh(new THREE.PlaneGeometry(400, 400), mat(0x6f9a55, { roughness: 1 }));
+const chao = new THREE.Mesh(new THREE.PlaneGeometry(1400, 1400), mat(0xb9b3a7, { roughness: 1 }));
 chao.rotation.x = -Math.PI / 2; chao.position.y = -0.06; chao.receiveShadow = true; scene.add(chao);
-caixa(84, 0.1, 22, 0x3b4047, 0, -0.1, 30);        // estacionamento / rua
+caixa(84, 0.1, 14, 0x3b4047, 0, -0.1, 26);        // estacionamento / rua
 caixa(66, 0.12, 4, 0xb9bcc0, 0, -0.1, 20);        // calçada
-caixa(14, 0.1, 30, 0x3b4047, -24.25, -0.1, -32);  // acesso doca de entrada
-caixa(10, 0.1, 30, 0x3b4047, 25, -0.1, -32);      // acesso doca de saída
+caixa(14, 0.1, 24, 0x3b4047, -24.25, -0.1, -30);  // acesso doca de entrada
+caixa(10, 0.1, 24, 0x3b4047, 25, -0.1, -30);      // acesso doca de saída
 for (let i = 0; i < 12; i++) caixa(0.15, 0.02, 5, 0xffffff, 8 + i * 2.6, 0, 26); // vagas
 for (let i = 0; i < 7; i++) caixa(0.5, 0.02, 3, 0xffffff, -4 + i * 1.1, 0, 23.5); // faixa de pedestres
 
@@ -312,8 +312,6 @@ ZONAS.forEach(z => {
 function carro(x, z, cor) { const g = new THREE.Group(); caixa(1.8, 0.6, 4.2, cor, 0, 0.35, 0, g, { roughness: 0.3, metalness: 0.4 }); caixa(1.6, 0.55, 2.2, 0x1b2a3a, 0, 0.95, -0.2, g, { roughness: 0.1, metalness: 0.5 }); for (const sx of [-0.9, 0.9]) for (const sz of [-1.3, 1.3]) { const r = cilindro(0.35, 0.25, 0x16181b, sx, 0, sz, g); r.rotation.z = Math.PI / 2; r.position.y = 0.35; } g.position.set(x, 0, z); scene.add(g); }
 carro(9.3, 26, 0xf2f2f2); carro(14.5, 26, 0x24272c); carro(27.5, 26, 0xe9e9e9);
 function arvore(x, z, s = 1) { cilindro(0.3 * s, 2.4 * s, 0x6b4a2d, x, 0, z); for (const [dy, r] of [[3.2, 2.1], [4.6, 1.6]]) { const c = new THREE.Mesh(new THREE.SphereGeometry(r * s, 10, 8), mat(0x2f6b34, { roughness: 1 })); c.position.set(x + (Math.random() - 0.5), dy * s, z + (Math.random() - 0.5)); c.castShadow = true; scene.add(c); } }
-[[-38, -22], [-37, -6], [-38, 10], [-36, 26], [38, -20], [37, -2], [38, 14], [-14, -27], [-4, -29], [8, -27], [16, -29], [-34, -32], [35, -34], [-40, 38], [40, 36], [0, 44], [-20, 44], [22, 44]]
-  .forEach(([x, z]) => arvore(x, z, 0.9 + Math.random() * 0.5));
 
 // ---------- Pessoas (com pernas e braços articulados) ----------
 function pessoa(corColete = COR.amarelo, capacete = 0xffffff, pai = scene) {
@@ -341,6 +339,99 @@ const andarilhos = [
 });
 // equipe sentada na administração
 for (const [x, z] of [[-3, 8.3], [3.2, 8.3], [5.2, 11.8]]) { const p = pessoa(COR.azul, null); p.g.position.set(x, -0.35, z); p.g.rotation.y = Math.PI; sentar(p); }
+
+// ---------- Segurança: extintores e faixas de pedestre ----------
+function extintor(x, z, rot = 0) {
+  const g = new THREE.Group();
+  cilindro(0.13, 0.55, 0xd2231f, 0, 0.75, 0.16, g); cilindro(0.05, 0.14, 0x15181c, 0, 1.3, 0.16, g);
+  const pl = placaTexto([{ t: 'EXTINTOR', tam: 190, y: 0.3 }, { t: '▼', tam: 330, y: 0.72 }], 0.6, 0.6, { fundo: '#d2231f', texto: '#ffffff' }); pl.position.set(0, 2.1, 0.03); g.add(pl);
+  for (const [a, b, c, d] of [[-0.5, 0.05, 0.5, 0.05], [-0.5, 1, 0.5, 1], [-0.5, 0.05, -0.5, 1], [0.5, 0.05, 0.5, 1]]) { const w = Math.abs(c - a) || 0.1, dd = Math.abs(d - b) || 0.1; const m = caixa(w, 0.02, dd, 0xd2231f, (a + c) / 2, 0.001, (b + d) / 2, g); m.castShadow = false; }
+  g.position.set(x, 0, z); g.rotation.y = rot; scene.add(g);
+}
+[[-12, -17.8, 0], [2, -17.8, 0], [13.5, -17.8, 0]].forEach(p => extintor(...p));
+[[-29.8, -4, Math.PI / 2], [-29.8, 9, Math.PI / 2]].forEach(p => extintor(...p));
+[[29.8, -4, -Math.PI / 2], [29.8, 9, -Math.PI / 2]].forEach(p => extintor(...p));
+[[-12, 13.8, Math.PI], [14, 13.8, Math.PI], [-18, -12, Math.PI / 2], [19.6, -12, -Math.PI / 2]].forEach(p => extintor(...p));
+// faixa de pedestres verde, com zebra onde cruza a rota das empilhadeiras
+function faixaPedestre(x0, z0, x1, z1) {
+  const horiz = z0 === z1, comp = horiz ? x1 - x0 : z1 - z0;
+  const m = caixa(horiz ? comp : 1, 0.015, horiz ? 1 : comp, 0x2e9b57, (x0 + x1) / 2, 0.001, (z0 + z1) / 2); m.castShadow = false;
+  for (const o of [-0.5, 0.5]) { const b = caixa(horiz ? comp : 0.08, 0.02, horiz ? 0.08 : comp, 0xffffff, (x0 + x1) / 2 + (horiz ? 0 : o), 0.001, (z0 + z1) / 2 + (horiz ? o : 0)); b.castShadow = false; }
+}
+function zebra(x0, z0, x1, z1) { const horiz = z0 === z1, n = Math.round(Math.abs(horiz ? x1 - x0 : z1 - z0) / 0.7); for (let i = 0; i < n; i++) { const k = (i + 0.5) / n; const m = caixa(horiz ? 0.35 : 1.3, 0.022, horiz ? 1.3 : 0.35, 0xffffff, x0 + (x1 - x0) * k, 0.001, z0 + (z1 - z0) * k); m.castShadow = false; } }
+faixaPedestre(-29, 13, -5.6, 13); faixaPedestre(7.6, 13, 29, 13);       // junto à fachada interna
+faixaPedestre(-18.9, 5.6, -18.9, 12.5); zebra(-18.9, 2.6, -18.9, 5.6);
+faixaPedestre(7.5, -17.4, 7.5, -4.4); zebra(7.5, -4.4, 7.5, -1.2); faixaPedestre(8.1, -1.2, 8.1, 12.5);
+textoPiso('PEDESTRES', -24, 13, 3.2, '#ffffff'); textoPiso('PEDESTRES', 24, 13, 3.2, '#ffffff');
+
+// ---------- Entorno real: Rua Rui Barbosa, Praça Mané Garrincha, Estádio (base: OpenStreetMap) ----------
+function plano(w, d, cor, x, z, y = -0.06, h = 0.04) { const m = caixa(w, h, d, cor, x, y, z, scene, { roughness: 1 }); m.castShadow = false; return m; }
+const ASF = 0x3b4047, CALC = 0xc9c5bd, GRAMA = 0x6f9a55;
+function rua(x0, z0, x1, z1, larg = 9, cor = ASF) {
+  const h = z0 === z1; plano(h ? x1 - x0 : larg + 5, h ? larg + 5 : z1 - z0, CALC, (x0 + x1) / 2, (z0 + z1) / 2, -0.07);
+  plano(h ? x1 - x0 : larg, h ? larg : z1 - z0, cor, (x0 + x1) / 2, (z0 + z1) / 2);
+  const n = Math.floor((h ? x1 - x0 : z1 - z0) / 8);
+  for (let i = 0; i < n; i++) { const k = (i + 0.5) / n; const m = caixa(h ? 3 : 0.2, 0.01, h ? 0.2 : 3, 0xffffff, x0 + (x1 - x0) * k, -0.02, z0 + (z1 - z0) * k); m.castShadow = false; }
+}
+plano(107, 147, CALC, 0, -38, -0.07);                    // quadra do Senac / praça
+rua(-320, 40, 330, 40);                                   // Rua Rui Barbosa
+rua(58, -330, 58, 300);                                   // Rua Coriolano Milhomem
+rua(-58, -111, -58, 35.5, 7);                             // rua lateral da praça
+rua(-320, -116, 330, -116);                               // Rua Gonçalves Dias
+rua(-100, -330, -100, 300, 13);                           // Rua Simplício Moreira
+rua(-320, 95, 330, 95, 8); rua(-320, -200, 330, -200, 8); rua(225, -330, 225, 300, 8); rua(-190, -330, -190, 300, 8);
+plano(84, 7, ASF, 11.5, -40, -0.1, 0.1);                  // via de serviço das docas
+// Praça Mané Garrincha
+plano(100, 62, GRAMA, 0, -77, -0.03, 0.03); plano(16, 60, GRAMA, -42, -13, -0.03, 0.03); plano(14, 46, GRAMA, 43, -13, -0.03, 0.03);
+plano(100, 3, 0xd8cfb8, 0, -77, -0.02, 0.03); plano(3, 62, 0xd8cfb8, -2, -77, -0.02, 0.03);
+function quadraEsportiva(x, z, w, d, cor) { plano(w, d, cor, x, z, -0.01, 0.03); const l = (a, b, c, e) => { const m = caixa(Math.abs(c - a) || 0.15, 0.01, Math.abs(e - b) || 0.15, 0xffffff, (a + c) / 2, 0.02, (b + e) / 2); m.castShadow = false; };
+  l(x - w / 2 + 1, z - d / 2 + 1, x + w / 2 - 1, z - d / 2 + 1); l(x - w / 2 + 1, z + d / 2 - 1, x + w / 2 - 1, z + d / 2 - 1); l(x - w / 2 + 1, z - d / 2 + 1, x - w / 2 + 1, z + d / 2 - 1); l(x + w / 2 - 1, z - d / 2 + 1, x + w / 2 - 1, z + d / 2 - 1); l(x - w / 2 + 1, z, x + w / 2 - 1, z); }
+quadraEsportiva(-28, -92, 20, 28, 0x3f9d8f); quadraEsportiva(-28, -60, 20, 26, 0x3f9d8f); quadraEsportiva(24, -62, 16, 16, 0x4a86b8); quadraEsportiva(26, -93, 22, 24, 0xc7a36a);
+for (const [x, z] of [[-8, -75], [4, -75], [-8, -79], [4, -79], [-40, -77], [40, -77]]) { caixa(2, 0.12, 0.6, 0x8a623a, x, 0.4, z); caixa(0.15, 0.4, 0.5, 0x555, x - 0.8, 0, z); caixa(0.15, 0.4, 0.5, 0x555, x + 0.8, 0, z); }
+for (const [x, z] of [[-2, -52], [-2, -102], [-46, -77], [46, -77], [12, -77], [-14, -77]]) { cilindro(0.1, 5, 0x444a52, x, 0, z); const l = new THREE.Mesh(new THREE.SphereGeometry(0.35, 8, 6), mat(0xfff3c4, { emissive: 0xffe9a0, emissiveIntensity: 0.6 })); l.position.set(x, 5.2, z); scene.add(l); }
+{ let sem = 7; const rnd = () => (sem = (sem * 16807) % 2147483647) / 2147483647;
+  const livre = (x, z) => !(Math.abs(x + 28) < 12 && z < -45 && z > -108) && !(x > 13 && x < 39 && z < -52 && z > -107) && Math.abs(z + 77) > 3 && Math.abs(x + 2) > 3;
+  for (let i = 0; i < 46; i++) { const x = -48 + rnd() * 96, z = -106 + rnd() * 58; if (livre(x, z)) arvore(x, z, 0.9 + rnd() * 0.6); }
+  for (let i = 0; i < 9; i++) { arvore(-42 + (rnd() - 0.5) * 10, -40 + i * 6.5, 0.9 + rnd() * 0.5); if (i < 7) arvore(43 + (rnd() - 0.5) * 8, -33 + i * 6.5, 0.9 + rnd() * 0.5); }
+  for (let i = 0; i < 9; i++) { arvore(-46 + i * 11.5, 34.2, 0.7); }
+  // Estádio Frei Epifânio d'Abadia
+  const ex = 142, ez = -34;
+  plano(150, 112, 0x9aa0a6, ex, ez, -0.05); plano(105, 68, 0x3f9a4a, ex, ez, 0, 0.05); plano(113, 76, 0xb8704a, ex, ez, -0.02, 0.04);
+  for (const [a, b, c, e] of [[-52.5, -34, 52.5, -34], [-52.5, 34, 52.5, 34], [-52.5, -34, -52.5, 34], [52.5, -34, 52.5, 34], [0, -34, 0, 34]]) { const m = caixa(Math.abs(c - a) || 0.3, 0.01, Math.abs(e - b) || 0.3, 0xffffff, ex + (a + c) / 2, 0.05, ez + (b + e) / 2); m.castShadow = false; }
+  for (let d = 0; d < 5; d++) { const o = 41 + d * 2.6, h = 1.2 + d * 1.5; caixa(118, h, 2.6, 0xc9ccd0, ex, 0, ez - o); caixa(118, h, 2.6, 0xc9ccd0, ex, 0, ez + o); caixa(2.6, h, 78, 0xc9ccd0, ex - 59.5 - d * 2.6, 0, ez); caixa(2.6, h, 78, 0xc9ccd0, ex + 59.5 + d * 2.6, 0, ez); }
+  caixa(118, 0.5, 14, 0x3b6fb3, ex, 9.5, ez + 49); for (let i = -5; i <= 5; i++) caixa(0.5, 9.5, 0.5, 0xe6e8ea, ex + i * 11, 0, ez + 55);
+  // prédios vizinhos conhecidos
+  const predio = (x, z, w, d, h, cor, telhado = 0xb5562f) => { caixa(w, h, d, cor, x, 0, z); caixa(w + 0.8, 0.5, d + 0.8, telhado, x, h, z); };
+  predio(28, 68, 44, 30, 9, 0xe9e4d8, 0x8f9499);      // Receita Federal
+  predio(-38, 70, 40, 34, 11, 0xdcd6c6, 0x8f9499);    // Fórum
+  predio(-80, -62, 22, 34, 6, 0xe7dfcf);              // Prato Cidadão
+  for (let i = 0; i < 4; i++) predio(-30 + i * 4, -140 - i * 14, 96, 9, 6, 0xe9e2d2); // Centro de Ensino Dorgival Pinheiro de Sousa
+  plano(22, 40, GRAMA, -80, 68, -0.03, 0.03); for (let i = 0; i < 6; i++) arvore(-86 + rnd() * 14, 54 + i * 5.5, 1);
+  // casario do Centro (telhados de barro)
+  const casas = [];
+  const quadraCasas = (x0, x1, z0, z1) => { for (let z = z0 + 5; z < z1 - 4; z += 11) for (let x = x0 + 5; x < x1 - 4;) { const w = 7 + rnd() * 6; if (rnd() < 0.93) casas.push([x + w / 2, z + (rnd() - 0.5), w - 0.8, 8.5 + rnd() * 1.5, 3 + rnd() * 2.5]); x += w; } };
+  [[66, 220, 48, 90], [-93, -66, 48, 90], [-93, 220, 100, 190], [66, 220, 100, 190], [-93, -66, -108, -5], [66, 220, -195, -124], [-93, 52, -195, -180], [-185, -108, -195, 190], [230, 300, -195, 190], [-93, 220, -290, -205], [-300, -195, -195, 190], [-185, -108, -290, -205]]
+    .forEach(q => { if (q[0] === -93 && q[2] === -108) { quadraCasas(-93, -66, -40, 34); quadraCasas(-93, -66, -108, -84); } else if (q[0] === -93 && q[1] === 220 && q[2] === 100) { quadraCasas(-93, 52, 100, 190); } else quadraCasas(...q); });
+  const paredes = new THREE.InstancedMesh(geoCaixa, new THREE.MeshStandardMaterial({ roughness: 0.9 }), casas.length), telhas = new THREE.InstancedMesh(geoCaixa, new THREE.MeshStandardMaterial({ roughness: 0.9 }), casas.length);
+  const o = new THREE.Object3D(), c = new THREE.Color(), tons = [0xf1e9da, 0xe6dcc8, 0xd9e2e6, 0xf2d9c4, 0xe3e8d6];
+  casas.forEach(([x, z, w, d, h], i) => { o.position.set(x, h / 2, z); o.scale.set(w, h, d); o.updateMatrix(); paredes.setMatrixAt(i, o.matrix); paredes.setColorAt(i, c.set(tons[i % 5]));
+    o.position.set(x, h + 0.25, z); o.scale.set(w + 0.6, 0.5, d + 0.6); o.updateMatrix(); telhas.setMatrixAt(i, o.matrix); telhas.setColorAt(i, c.set(rnd() < 0.85 ? 0xb5562f : 0xd9dcdf).offsetHSL(0, 0, (rnd() - 0.5) * 0.08)); });
+  scene.add(paredes, telhas);
+}
+// nomes das ruas e dos pontos de referência
+[['RUA RUI BARBOSA', 0, 40, 0], ['RUA RUI BARBOSA', 140, 40, 0], ['RUA CORIOLANO MILHOMEM', 58, -20, Math.PI / 2], ['RUA GONÇALVES DIAS', 0, -116, 0], ['RUA SIMPLÍCIO MOREIRA', -100, -30, Math.PI / 2]]
+  .forEach(([t, x, z, r]) => textoPiso(t, x, z, 30, '#ffffff', r));
+function marco(t, x, y, z, esc = 26) { const c = document.createElement('canvas'); c.width = 1024; c.height = 128; const g = c.getContext('2d'); g.fillStyle = 'rgba(15,27,45,.88)'; g.beginPath(); g.roundRect(4, 4, 1016, 120, 60); g.fill(); g.fillStyle = '#fff'; g.font = '700 64px Arial, Helvetica, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(t, 512, 68, 980);
+  const tx = new THREE.CanvasTexture(c); tx.colorSpace = THREE.SRGBColorSpace; const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tx, depthTest: false, fog: false })); sp.scale.set(esc, esc / 8, 1); sp.position.set(x, y, z); sp.renderOrder = 5; scene.add(sp); return sp; }
+const marcos = [marco('Praça Mané Garrincha', 0, 12, -77), marco('Estádio Frei Epifânio d\'Abadia', 142, 22, -34, 34), marco('Receita Federal', 28, 15, 68, 20), marco('Fórum Henrique de La Rocque', -38, 17, 70), marco('Prato Cidadão', -80, 11, -62, 18), marco('C. E. Dorgival Pinheiro de Sousa', -24, 13, -160, 34)];
+// pedestres passando ao redor
+const ROUPAS = [0xc0392b, 0x2e86c1, 0x27ae60, 0x8e44ad, 0xe67e22, 0xf4f4f4, 0x34495e, 0xe84393];
+[[[-50, 34.4], [50, 34.4]], [[45, 34.4], [-45, 34.4]], [[52.2, 30], [52.2, -105]], [[52.2, -90], [52.2, 20]], [[-52.5, -100], [-52.5, 30]], [[-48, -77], [48, -77]], [[30, -77], [-40, -77]],
+ [[-2, -106], [-2, -48]], [[-2, -50], [-2, -100]], [[-45, 46.2], [50, 46.2]], [[63.8, 30], [63.8, -100]], [[-36, 20], [-36, -40]], [[-12, 20.5], [14, 20.5]], [[-45, -109.5], [45, -109.5]]]
+  .forEach(([a, b], i) => { const p = pessoa(ROUPAS[i % 8], null); andarilhos.push({ ...p, leva: null, civil: true, a: new THREE.Vector3(a[0], 0, a[1]), b: new THREE.Vector3(b[0], 0, b[1]), fase: i * 7.3, vel: 1.1 + (i % 4) * 0.15 }); });
+// carros circulando
+const transito = [[-1, 0, 38, 0xd23b2f, 9], [-1, 0, 42, 0xf2f2f2, 12], [-1, 0, 38, 0x2e86c1, 10, 150], [0, -1, 56, 0x24272c, 10], [0, -1, 60, 0xf6c21c, 8, 120], [0, 1, -103, 0xc0c4c8, 11], [0, 1, -97, 0x27ae60, 9, 200], [1, 0, -118, 0xf2f2f2, 10]]
+  .map(([dx, dz, fixo, cor, vel, ini = 0]) => { const g = new THREE.Group(); scene.add(g); const antes = scene.children.length; carro(0, 0, cor); const c = scene.children.pop(); g.add(c); g.rotation.y = Math.atan2(dx, dz); return { g, dx, dz, fixo, vel, p: ini }; });
 
 // ---------- Empilhadeiras ----------
 function empilhadeira() {
@@ -428,6 +519,7 @@ function iniciarTour() { tour = { i: -1, t: 0 }; carga.visible = true; document.
 function pararTour() { tour = null; carga.visible = false; document.body.classList.remove('em-tour'); $('btn-tour').textContent = '▶ Tour do fluxo'; $('barra').style.width = '0'; }
 $('btn-tour').onclick = () => tour ? pararTour() : iniciarTour();
 $('btn-geral').onclick = visaoGeral;
+$('btn-entorno').onclick = () => { visaoGeral(); voar(new THREE.Vector3(30, 190, 215), new THREE.Vector3(30, 0, -30), 1.8); };
 $('p-fechar').onclick = visaoGeral;
 $('t-ant').onclick = () => tour && irEtapa((tour.i + FLUXO.length - 1) % FLUXO.length);
 $('t-prox').onclick = () => tour && irEtapa((tour.i + 1) % FLUXO.length);
@@ -466,9 +558,12 @@ function quadro() {
     a.pernas[0].rotation.x = bal; a.pernas[1].rotation.x = -bal;
     if (a.leva) { a.bracos[0].rotation.x = a.bracos[1].rotation.x = a.leva === 'caixa' ? -1.25 : -0.7; }
     else if (andando) { a.bracos[0].rotation.x = -bal * 0.8; a.bracos[1].rotation.x = bal * 0.8; }
+    else if (a.civil) { a.bracos[0].rotation.x = a.bracos[1].rotation.x = 0; }
     else { a.bracos[0].rotation.x = -0.9 + Math.sin(T * 3 + a.fase) * 0.35; a.bracos[1].rotation.x = -0.9 + Math.cos(T * 3.4 + a.fase) * 0.35; } // trabalhando parado
     v.subVectors(indo ? a.b : a.a, indo ? a.a : a.b); a.g.rotation.y = Math.atan2(v.x, v.z);
   });
+  transito.forEach(c => { c.p = (c.p + c.vel * dt) % 520; const q = -260 + c.p; c.g.position.set(c.dx ? c.dx * q : c.fixo, 0, c.dz ? c.dz * q : c.fixo); });
+  const longe = camera.position.distanceTo(controls.target) > 110; marcos.forEach(m => m.visible = longe); elRotulos.style.opacity = longe ? 0 : 1;
   if (voo) { voo.t += dt / voo.dur; const k = suave(Math.min(1, voo.t)); camera.position.lerpVectors(voo.p0, voo.p1, k); controls.target.lerpVectors(voo.a0, voo.a1, k); if (voo.t >= 1) voo = null; }
   destaque.material.opacity = selecionada ? 0.16 + Math.sin(T * 3) * 0.07 : 0;
   if (tour) {
