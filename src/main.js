@@ -14,6 +14,7 @@ const ZONAS = [
   { id: 'armazenagem', nome: 'Armazenagem', x0: -17.5, x1: -3, z0: -15, z1: 3, etapa: 3,
     resumo: 'Guarda os itens em locais organizados e estratégicos.',
     texto: 'Os paletes são guardados em estruturas porta-paletes, com endereço para cada posição. A organização mantém a integridade dos alimentos e facilita encontrar cada produto.',
+    tipo: ["Porta-paletes seletivo (convencional): é o sistema principal deste CD — as 4 ruas de estantes azuis e laranjas. Cada palete fica numa posição própria e a empilhadeira acessa qualquer um sem precisar mexer nos outros.", "Por que este tipo: o CD tem muitos produtos diferentes (arroz, feijão, vários lotes e validades). O acesso direto a cada palete permite cumprir o FEFO e facilita o inventário.", "Desvantagem: precisa de corredor entre as estantes, então aproveita menos o espaço do que sistemas compactos.", "Armazenagem blocada: paletes empilhados direto no chão, um sobre o outro, sem estante. Aqui aparece só na área marcada BLOCADO, ao lado das estantes, para cargas de alto giro e curta permanência.", "Limite do blocado: só se alcança o palete da frente e de cima (o último que entra é o primeiro que sai), por isso não serve para o estoque principal de alimentos com validade.", "Verticalização: os 4 níveis de altura aproveitam o pé-direito do galpão; o nível do chão é o mais usado para itens de maior giro."],
     conceitos: ["Endereçamento: rua, módulo, nível e posição — todo palete tem endereço.", "FEFO (PVPS): primeiro que vence, primeiro que sai — a regra para alimentos.", "Curva ABC: itens de maior giro ficam nos locais de acesso mais fácil.", "Alimentos sempre sobre paletes, afastados do chão e das paredes.", "Inventário cíclico para manter a acuracidade do estoque."] },
   { id: 'separacao', nome: 'Separação de Pedidos', x0: 8, x1: 19, z0: -15, z1: -4.5, etapa: 4,
     resumo: 'Prepara os pedidos conforme as necessidades dos clientes.',
@@ -234,6 +235,9 @@ tracejado(-18, 4.2, -5.6, 4.2); tracejado(-5.6, 4.2, 7.6, 4.2); tracejado(7.6, 4
 textoPiso('CROSS-DOCKING  ➜', -11.5, 4.9, 7, '#2f7fe0');
 // identificação das ruas do porta-paletes (endereçamento)
 ['A', 'B', 'C', 'D'].forEach((r, i) => { const p = placaTexto([{ t: 'RUA ' + r, tam: 300, y: 0.54 }], 1.5, 0.75, { fundo: '#f6c21c', texto: '#12356b' }); p.position.set(-15.6 + i * 3.2, 5.6, 1.75); scene.add(p); const q = p.clone(); q.rotation.y = Math.PI; q.position.z = 1.73; scene.add(q); });
+
+contorno(-2.6, -6.1, 3.6, -1.9); textoPiso('BLOCADO', 0.5, -1.4, 2.6);
+textoPiso('PORTA-PALETES SELETIVO', -10.8, 2.15, 7.5);
 
 // ---------- Mesas, bancadas e computadores ----------
 function mesa(x, z, w = 2.4, d = 1.1, cor = 0xe9e4da, rot = 0) {
@@ -501,7 +505,7 @@ function selecionar(id, doTour = false) {
   destaque.scale.set(z.x1 - z.x0 - 1, z.z1 - z.z0 - 1.1, 1); destaque.position.set(z.cx, 0.04, z.cz + 0.05);
   ZONAS.forEach(o => { o.chip.classList.toggle('ativo', o === z); o.rotulo.classList.toggle('ativo', o === z); });
   $('p-etapa').textContent = z.etapa ? `Etapa ${z.etapa} de 6 do fluxo` : 'Área de apoio';
-  $('p-titulo').textContent = z.nome; $('p-resumo').textContent = z.resumo; $('p-texto').textContent = z.texto; $('p-conceitos').innerHTML = z.conceitos.map(c => { const i = c.indexOf(':'); return '<li>' + (i > 0 ? '<b>' + c.slice(0, i) + '</b>' + c.slice(i) : c) + '</li>'; }).join(''); elPainel.scrollTop = 0;
+  $('p-titulo').textContent = z.nome; $('p-resumo').textContent = z.resumo; $('p-texto').textContent = z.texto; const li = c => { const i = c.indexOf(':'); return '<li>' + (i > 0 ? '<b>' + c.slice(0, i) + '</b>' + c.slice(i) : c) + '</li>'; }; $('p-tipo-box').style.display = z.tipo ? '' : 'none'; $('p-tipo').innerHTML = (z.tipo || []).map(li).join(''); $('p-conceitos').innerHTML = z.conceitos.map(c => { const i = c.indexOf(':'); return '<li>' + (i > 0 ? '<b>' + c.slice(0, i) + '</b>' + c.slice(i) : c) + '</li>'; }).join(''); elPainel.scrollTop = 0;
   elPainel.classList.add('aberto'); $('dica').classList.add('oculta');
 }
 function visaoGeral() {

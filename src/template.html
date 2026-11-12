@@ -37,8 +37,8 @@
   #p-resumo { margin: 0 0 8px; font-weight: 700; font-size: 14px; }
   #p-texto { margin: 0; font-size: 14px; line-height: 1.5; color: var(--suave); }
   #painel h3 { margin: 12px 0 6px; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--laranja); }
-  #p-conceitos { margin: 0; padding-left: 18px; font-size: 13px; line-height: 1.45; color: var(--texto); }
-  #p-conceitos li { margin-bottom: 4px; } #p-conceitos li::marker { color: var(--laranja); }
+  #p-conceitos, .lst { margin: 0; padding-left: 18px; font-size: 13px; line-height: 1.45; color: var(--texto); }
+  #p-conceitos li, .lst li { margin-bottom: 4px; } #p-conceitos li::marker, .lst li::marker { color: var(--laranja); }
   #painel { max-height: calc(100vh - 100px); overflow-y: auto; }
   #p-fechar { position: absolute; top: 10px; right: 10px; width: 32px; height: 32px; border-radius: 8px; background: transparent; font-size: 20px; color: var(--suave); }
   #tour { display: none; align-items: center; gap: 8px; margin-top: 12px; }
@@ -89,6 +89,7 @@
   <h2 id="p-titulo"></h2>
   <p id="p-resumo"></p>
   <p id="p-texto"></p>
+  <div id="p-tipo-box"><h3>Tipo de armazenagem</h3><ul id="p-tipo" class="lst"></ul></div>
   <h3>Conceitos de logística</h3>
   <ul id="p-conceitos"></ul>
   <div id="tour"><button id="t-ant" aria-label="Etapa anterior">‹</button><div class="trilho"><div id="barra"></div></div><button id="t-prox" aria-label="Próxima etapa">›</button></div>
