@@ -5,25 +5,32 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 const ZONAS = [
   { id: 'entrada', nome: 'Doca de Entrada', x0: -30, x1: -18.5, z0: -18, z1: 5, etapa: 1,
     resumo: 'Recebe os produtos com agilidade e segurança.',
-    texto: 'É por aqui que os caminhões dos fornecedores chegam com arroz, feijão e outros alimentos. A carga é descarregada com empilhadeiras e paleteiras e segue para a conferência.' },
+    texto: 'É por aqui que os caminhões dos fornecedores chegam com arroz, feijão e outros alimentos. A carga é descarregada com empilhadeiras e paleteiras e segue para a conferência.',
+    conceitos: ["Agendamento de descarga: cada caminhão tem hora marcada para evitar fila no pátio.", "Caminhão encosta de ré na doca, com calço nas rodas e rampa niveladora.", "Área de staging: a carga fica aqui, separada, até ser conferida.", "Cross-docking: carga que já tem destino vai direto para a expedição, sem passar pelo estoque."] },
   { id: 'recebimento', nome: 'Recebimento e Conferência', x0: -2.5, x1: 7, z0: -18, z1: -8.5, etapa: 2,
     resumo: 'Confere qualidade e quantidade de cada entrega.',
-    texto: 'Cada entrega é comparada com a nota fiscal: quantidade, validade, lote e estado das embalagens. Só depois de aprovada a mercadoria entra no estoque do CD.' },
+    texto: 'Cada entrega é comparada com a nota fiscal: quantidade, validade, lote e estado das embalagens. Só depois de aprovada a mercadoria entra no estoque do CD.',
+    conceitos: ["Conferência cega: o conferente conta sem ver a quantidade da nota, para não ser induzido.", "Confronto entre nota fiscal, pedido de compra e carga física.", "Em alimentos: validade, lote e integridade da embalagem.", "Avarias e divergências vão para a área de quarentena, fora do estoque.", "Etiqueta e entrada no WMS (sistema de gerenciamento do armazém)."] },
   { id: 'armazenagem', nome: 'Armazenagem', x0: -17.5, x1: -3, z0: -15, z1: 3, etapa: 3,
     resumo: 'Guarda os itens em locais organizados e estratégicos.',
-    texto: 'Os paletes são guardados em estruturas porta-paletes, com endereço para cada posição. A organização mantém a integridade dos alimentos e facilita encontrar cada produto.' },
+    texto: 'Os paletes são guardados em estruturas porta-paletes, com endereço para cada posição. A organização mantém a integridade dos alimentos e facilita encontrar cada produto.',
+    conceitos: ["Endereçamento: rua, módulo, nível e posição — todo palete tem endereço.", "FEFO (PVPS): primeiro que vence, primeiro que sai — a regra para alimentos.", "Curva ABC: itens de maior giro ficam nos locais de acesso mais fácil.", "Alimentos sempre sobre paletes, afastados do chão e das paredes.", "Inventário cíclico para manter a acuracidade do estoque."] },
   { id: 'separacao', nome: 'Separação de Pedidos', x0: 8, x1: 19, z0: -15, z1: -4.5, etapa: 4,
     resumo: 'Prepara os pedidos conforme as necessidades dos clientes.',
-    texto: 'Também chamada de picking. Os operadores retiram do estoque exatamente os itens e as quantidades de cada pedido e montam os volumes nas bancadas.' },
+    texto: 'Também chamada de picking. Os operadores retiram do estoque exatamente os itens e as quantidades de cada pedido e montam os volumes nas bancadas.',
+    conceitos: ["Picking: retirada dos itens do estoque para montar cada pedido.", "Tipos: por pedido (discreto), por lote ou por zona.", "Lista de separação ou coletor de dados guia o operador.", "Posições de picking no nível do chão, ressupridas pelo estoque aéreo.", "É a atividade que mais consome mão de obra em um CD."] },
   { id: 'expedicao', nome: 'Expedição', x0: 9, x1: 19, z0: -1, z1: 9, etapa: 5,
     resumo: 'Organiza e libera os pedidos para envio.',
-    texto: 'Os pedidos separados são conferidos de novo, embalados, identificados e agrupados por rota de entrega, prontos para o carregamento.' },
+    texto: 'Os pedidos separados são conferidos de novo, embalados, identificados e agrupados por rota de entrega, prontos para o carregamento.',
+    conceitos: ["Segunda conferência: pedido separado confere com o pedido do cliente.", "Packing: embalagem, identificação e etiqueta de cada volume.", "Consolidação por rota de entrega.", "Emissão da nota fiscal e do romaneio de carga."] },
   { id: 'saida', nome: 'Doca de Saída', x0: 20, x1: 30, z0: -18, z1: 5, etapa: 6,
     resumo: 'Realiza o carregamento e a saída das mercadorias.',
-    texto: 'Os caminhões são carregados na ordem inversa das entregas e saem com controle de prazos e condições, levando os alimentos até os clientes.' },
+    texto: 'Os caminhões são carregados na ordem inversa das entregas e saem com controle de prazos e condições, levando os alimentos até os clientes.',
+    conceitos: ["Roteirização: define a sequência das entregas.", "Carregamento na ordem inversa da entrega (o último a entregar entra primeiro).", "Conferência de embarque e lacre do caminhão.", "Indicador OTIF: entrega no prazo e completa."] },
   { id: 'administracao', nome: 'Administração', x0: -5, x1: 7, z0: 5, z1: 13.5, etapa: 0,
     resumo: 'Garante a gestão e o suporte de todas as operações.',
-    texto: 'A equipe administrativa acompanha estoque, notas fiscais, pessoas e indicadores. É o apoio que mantém todas as outras áreas funcionando.' },
+    texto: 'A equipe administrativa acompanha estoque, notas fiscais, pessoas e indicadores. É o apoio que mantém todas as outras áreas funcionando.',
+    conceitos: ["WMS: controla endereços, estoque e tarefas do armazém.", "Indicadores (KPIs): acuracidade de estoque, OTIF, produtividade e avarias.", "Gestão de pessoas, treinamentos e escalas.", "Segurança: EPIs e NR-11 para operação de empilhadeiras."] },
 ];
 const FLUXO = ['entrada', 'recebimento', 'armazenagem', 'separacao', 'expedicao', 'saida'];
 const zonaPorId = Object.fromEntries(ZONAS.map(z => [z.id, z]));
@@ -152,6 +159,7 @@ function portaDoca(x) {
 }
 portaDoca(-24.25); portaDoca(25);
 
+const addCaixaDepois = [];
 // ---------- Caminhão ----------
 function caminhao(x, z, aberto) {
   const g = new THREE.Group();
@@ -166,8 +174,12 @@ function caminhao(x, z, aberto) {
   if (aberto) caixa(2.3, 2.6, 0.08, 0x2a2f36, 0, 1.3, -5.72, g);
   g.position.set(x, 0, z); scene.add(g); return g;
 }
-caminhao(-24.25, -9, true);
-caminhao(25, -9, true);
+for (const x of [-24.25, 25]) {
+  const c = caminhao(x, -10.5, true); c.rotation.y = Math.PI;        // encostado de ré
+  caixa(2.6, 0.12, 1.6, COR.amarelo, x, 0, -3.9).rotation.x = 0.0;   // rampa niveladora
+  for (const sx of [-1.7, 1.7]) caixa(0.35, 0.3, 0.5, COR.amarelo, x + sx, 0, -6.2); // calços de roda
+  for (const [dx, dy] of [[-0.6, 1.2], [0.6, 1.2], [-0.6, 1.75], [0.6, 1.75]]) addCaixaDepois.push([x + dx, dy, -5.4]);
+}
 
 // ---------- Caixas instanciadas ----------
 const caixasInst = [];
@@ -180,6 +192,7 @@ function palete(x, z, niveis = 2, pai) {
     addCaixa(x + dx, 0.14 + n * 0.52, z + dz, 0.58, 0.5, 0.58);
 }
 
+addCaixaDepois.forEach(([x, y, z]) => addCaixa(x, y, z, 1, 0.5, 1));
 // ---------- Porta-paletes (Armazenagem) ----------
 function estante(x, z0, z1, niveis = 4) {
   const prof = 1.5, alt = niveis * 1.25;
@@ -199,8 +212,28 @@ for (const x of [-15.6, -12.4, -9.2, -6]) estante(x, -13.6, 1.6);
 for (const [x, z] of [[-1.5, -5], [-1.5, -3], [0.5, -5], [0.5, -3], [2.5, -5]]) palete(x, z, 3);
 
 // ---------- Doca de entrada / saída: cargas ----------
-for (const [x, z] of [[-20, -3], [-20, -1], [-21.8, 1.5], [-27, 1], [-27.6, -1.5]]) palete(x, z, 2);
+for (const [x, z] of [[-21, -1.5], [-22.6, 0.6], [-20.8, 1.2], [-27, 1.2], [-27.6, -1]]) palete(x, z, 2);
 for (const [x, z] of [[21.5, 1.5], [21.5, -0.5], [23.5, 2.5], [28.3, 0.5]]) palete(x, z, 2);
+
+// ---------- Sinalização de logística ----------
+function textoPiso(t, x, z, w, cor = '#f6c21c', rot = 0) {
+  const c = document.createElement('canvas'); c.width = 1024; c.height = 160; const g = c.getContext('2d');
+  g.fillStyle = cor; g.font = '800 96px Arial, Helvetica, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(t, 512, 84, 1000);
+  const tx = new THREE.CanvasTexture(c); tx.colorSpace = THREE.SRGBColorSpace; tx.anisotropy = 8;
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(w, w * 0.156), new THREE.MeshBasicMaterial({ map: tx, transparent: true, depthWrite: false }));
+  m.rotation.x = -Math.PI / 2; m.rotation.z = rot; m.position.set(x, 0.03, z); scene.add(m); return m;
+}
+textoPiso('STAGING — AGUARDANDO CONFERÊNCIA', -24.2, 3.6, 9.5);
+// área de avarias / quarentena (vermelha)
+for (const [a, b, c2, d] of [[5.2, -11, 6.6, -11], [5.2, -9.2, 6.6, -9.2], [5.2, -11, 5.2, -9.2], [6.6, -11, 6.6, -9.2]]) linha(a, b, c2, d, 0xd23b2f);
+textoPiso('AVARIAS', 5.9, -8.9, 1.6, '#d23b2f');
+caixa(0.6, 0.45, 0.6, COR.papelao2, 5.7, 0, -10.3).rotation.y = 0.4; caixa(0.55, 0.4, 0.5, COR.papelao, 6.2, 0, -9.8).rotation.set(0.25, 1, 0.1);
+// rota de cross-docking (tracejado azul): doca de entrada -> expedição / doca de saída
+function tracejado(x0, z0, x1, z1) { const n = Math.round(Math.hypot(x1 - x0, z1 - z0) / 1.2); for (let i = 0; i < n; i++) { const k = (i + 0.25) / n, k2 = (i + 0.75) / n; linha(x0 + (x1 - x0) * k, z0 + (z1 - z0) * k, x0 + (x1 - x0) * k2 + (x0 === x1 ? 0.14 : 0), z0 + (z1 - z0) * k2 + (z0 === z1 ? 0.14 : 0), 0x2f7fe0).scale.y = 0.03; } }
+tracejado(-18, 4.2, -5.6, 4.2); tracejado(-5.6, 4.2, 7.6, 4.2); tracejado(7.6, 4.2, 7.6, -2.9); tracejado(7.6, -2.9, 19.6, -2.9);
+textoPiso('CROSS-DOCKING  ➜', -11.5, 4.9, 7, '#2f7fe0');
+// identificação das ruas do porta-paletes (endereçamento)
+['A', 'B', 'C', 'D'].forEach((r, i) => { const p = placaTexto([{ t: 'RUA ' + r, tam: 300, y: 0.54 }], 1.5, 0.75, { fundo: '#f6c21c', texto: '#12356b' }); p.position.set(-15.6 + i * 3.2, 5.6, 1.75); scene.add(p); const q = p.clone(); q.rotation.y = Math.PI; q.position.z = 1.73; scene.add(q); });
 
 // ---------- Mesas, bancadas e computadores ----------
 function mesa(x, z, w = 2.4, d = 1.1, cor = 0xe9e4da, rot = 0) {
@@ -220,7 +253,7 @@ function cadeira(x, z) { caixa(0.5, 0.1, 0.5, 0x22262c, x, 0.45, z); caixa(0.5, 
 // Recebimento e conferência
 mesa(0, -15.5); computador(0, -15.7); mesa(4, -15.5); computador(4, -15.7);
 caixa(2, 2.2, 0.5, COR.azul, -1, 0, -17.3); caixa(2, 2.2, 0.5, 0xdfe3e6, 5.5, 0, -17.3);
-for (const [x, z] of [[-1, -12], [1.2, -11.5], [3.4, -12], [5.5, -11.2]]) palete(x, z, 2);
+for (const [x, z] of [[-1, -12], [1.2, -11.5], [3.4, -12]]) palete(x, z, 2);
 addCaixa(-0.5, 0.9, -15.4, 0.45, 0.35, 0.45); addCaixa(4.6, 0.9, -15.4, 0.45, 0.35, 0.45);
 
 // Separação de pedidos: bancadas e prateleiras baixas
@@ -282,22 +315,32 @@ function arvore(x, z, s = 1) { cilindro(0.3 * s, 2.4 * s, 0x6b4a2d, x, 0, z); fo
 [[-38, -22], [-37, -6], [-38, 10], [-36, 26], [38, -20], [37, -2], [38, 14], [-14, -27], [-4, -29], [8, -27], [16, -29], [-34, -32], [35, -34], [-40, 38], [40, 36], [0, 44], [-20, 44], [22, 44]]
   .forEach(([x, z]) => arvore(x, z, 0.9 + Math.random() * 0.5));
 
-// ---------- Pessoas ----------
-function pessoa(corColete = COR.amarelo, capacete = 0xffffff) {
-  const g = new THREE.Group();
-  caixa(0.2, 0.85, 0.24, 0x1e2f55, -0.13, 0, 0, g); caixa(0.2, 0.85, 0.24, 0x1e2f55, 0.13, 0, 0, g);
+// ---------- Pessoas (com pernas e braços articulados) ----------
+function pessoa(corColete = COR.amarelo, capacete = 0xffffff, pai = scene) {
+  const g = new THREE.Group(), pernas = [], bracos = [];
+  for (const sx of [-0.13, 0.13]) { const p = new THREE.Group(); p.position.set(sx, 0.85, 0); caixa(0.2, 0.8, 0.24, 0x1e2f55, 0, -0.8, 0, p); caixa(0.21, 0.1, 0.32, 0x15181c, 0, -0.88, 0.04, p); g.add(p); pernas.push(p); }
   caixa(0.52, 0.7, 0.3, corColete, 0, 0.85, 0, g);
+  if (corColete === COR.amarelo) caixa(0.54, 0.08, 0.32, 0xdfe3e6, 0, 1.15, 0, g); // faixa refletiva
+  for (const sx of [-0.33, 0.33]) { const p = new THREE.Group(); p.position.set(sx, 1.5, 0); caixa(0.14, 0.42, 0.16, corColete, 0, -0.42, 0, p); caixa(0.12, 0.26, 0.14, 0xd9a57b, 0, -0.68, 0, p); g.add(p); bracos.push(p); }
   const cab = new THREE.Mesh(new THREE.SphereGeometry(0.17, 10, 8), mat(0xd9a57b)); cab.position.y = 1.74; g.add(cab);
   if (capacete !== null) { const cp = new THREE.Mesh(new THREE.SphereGeometry(0.19, 10, 6, 0, Math.PI * 2, 0, Math.PI / 2), mat(capacete)); cp.position.y = 1.78; g.add(cp); }
-  scene.add(g); return g;
+  pai.add(g); return { g, pernas, bracos };
 }
+function sentar(p) { p.pernas.forEach(l => l.rotation.x = -Math.PI / 2); p.bracos.forEach(b => b.rotation.x = -1.1); }
+// [de, para, leva: 'caixa' | 'paleteira' | null]
 const andarilhos = [
-  [[-21.5, 3], [-19.5, -5]], [[-27.5, 3.5], [-27.5, -3]], [[0, -13.8], [5, -13.8]], [[2, -9.6], [-1.5, -9.6]],
-  [[9.2, -11], [9.2, -6]], [[12.4, -11], [12.4, -8]], [[15.8, -8], [15.8, -5.4]], [[10, 2.6], [17, 2.6]],
-  [[13.2, 6.2], [17.5, 6.2]], [[22, 3.5], [28, 3.5]], [[-10.8, 2.6], [-10.8, -12]], [[-2.2, 3.4], [7.5, 3.4]],
-].map(([a, b], i) => ({ g: pessoa(i % 3 === 2 ? COR.azul : COR.amarelo), a: new THREE.Vector3(a[0], 0, a[1]), b: new THREE.Vector3(b[0], 0, b[1]), fase: Math.random() * 10, vel: 0.9 + Math.random() * 0.5 }));
+  [[-24.25, -2.6], [-22.6, 2.4], 'paleteira'], [[-27.5, 3.5], [-27.5, -3], null], [[0, -13.8], [5, -13.8], null], [[2, -9.6], [-1.5, -9.6], 'caixa'],
+  [[9.2, -11], [9.2, -6], 'caixa'], [[12.4, -11], [12.4, -8], null], [[15.8, -8], [15.8, -5.4], 'caixa'], [[10, 2.6], [17, 2.6], 'caixa'],
+  [[13.2, 6.2], [17.5, 6.2], null], [[22, 3.5], [25, -3.2], 'paleteira'], [[-10.8, 2.6], [-10.8, -12], null], [[-2.2, 3.4], [7.2, 3.4], null],
+  [[-7.6, -12], [-7.6, 1], 'caixa'], [[19.4, -13], [9, -13.4], null], [[-19.6, -4], [-3, -16.4], null],
+].map(([a, b, leva], i) => {
+  const p = pessoa(i % 3 === 2 ? COR.azul : COR.amarelo, i % 4 === 1 ? COR.azul : 0xffffff);
+  if (leva === 'caixa') caixa(0.45, 0.35, 0.4, COR.papelao, 0, 0.95, 0.42, p.g);
+  if (leva === 'paleteira') { caixa(0.06, 0.9, 0.06, 0xd23b2f, 0, 0.25, 0.55, p.g).rotation.x = 0.5; caixa(0.9, 0.12, 1.3, 0xd23b2f, 0, 0.05, 1.5, p.g); caixa(1.1, 0.12, 1.2, COR.madeira, 0, 0.17, 1.55, p.g); caixa(1, 0.8, 1.05, COR.papelao2, 0, 0.29, 1.55, p.g); }
+  return { ...p, leva, a: new THREE.Vector3(a[0], 0, a[1]), b: new THREE.Vector3(b[0], 0, b[1]), fase: Math.random() * 10, vel: 0.9 + Math.random() * 0.5 };
+});
 // equipe sentada na administração
-for (const [x, z] of [[-3, 8.3], [3.2, 8.3], [5.2, 11.8]]) { const p = pessoa(COR.azul, null); p.position.set(x, -0.35, z); p.rotation.y = Math.PI; }
+for (const [x, z] of [[-3, 8.3], [3.2, 8.3], [5.2, 11.8]]) { const p = pessoa(COR.azul, null); p.g.position.set(x, -0.35, z); p.g.rotation.y = Math.PI; sentar(p); }
 
 // ---------- Empilhadeiras ----------
 function empilhadeira() {
@@ -311,8 +354,10 @@ function empilhadeira() {
   caixa(1.2, 0.12, 1.2, COR.madeira, 0, 0.06, 0.7, garfo); caixa(1.1, 0.8, 1.1, COR.papelao, 0, 0.18, 0.7, garfo);
   garfo.position.set(0, 0.35, 0.85); g.add(garfo);
   for (const sx of [-0.55, 0.55]) for (const sz of [-0.8, 0.5]) { const r = cilindro(0.28, 0.2, 0x16181b, sx, 0, sz, g); r.rotation.z = Math.PI / 2; r.position.y = 0.28; }
-  caixa(0.4, 0.55, 0.3, COR.amarelo, 0, 1, -0.4, g);
-  scene.add(g); return { g, garfo };
+  caixa(0.5, 0.12, 0.5, 0x15181c, 0, 1, -0.35, g);
+  const op = pessoa(COR.amarelo, 0xffffff, g); op.g.position.set(0, 0.25, -0.4); op.g.scale.setScalar(0.85); sentar(op);
+  const luz = new THREE.Mesh(new THREE.SphereGeometry(0.1, 8, 6), new THREE.MeshStandardMaterial({ color: 0xff8a00, emissive: 0xff6a00 })); luz.position.set(0, 2.45, -0.2); g.add(luz);
+  scene.add(g); return { g, garfo, luz };
 }
 function rota(pontos) {
   const pts = pontos.map(p => new THREE.Vector3(p[0], 0, p[1])); const seg = []; let total = 0;
@@ -364,7 +409,7 @@ function selecionar(id, doTour = false) {
   destaque.scale.set(z.x1 - z.x0 - 1, z.z1 - z.z0 - 1.1, 1); destaque.position.set(z.cx, 0.04, z.cz + 0.05);
   ZONAS.forEach(o => { o.chip.classList.toggle('ativo', o === z); o.rotulo.classList.toggle('ativo', o === z); });
   $('p-etapa').textContent = z.etapa ? `Etapa ${z.etapa} de 6 do fluxo` : 'Área de apoio';
-  $('p-titulo').textContent = z.nome; $('p-resumo').textContent = z.resumo; $('p-texto').textContent = z.texto;
+  $('p-titulo').textContent = z.nome; $('p-resumo').textContent = z.resumo; $('p-texto').textContent = z.texto; $('p-conceitos').innerHTML = z.conceitos.map(c => { const i = c.indexOf(':'); return '<li>' + (i > 0 ? '<b>' + c.slice(0, i) + '</b>' + c.slice(i) : c) + '</li>'; }).join(''); elPainel.scrollTop = 0;
   elPainel.classList.add('aberto'); $('dica').classList.add('oculta');
 }
 function visaoGeral() {
@@ -409,13 +454,19 @@ const relogio = new THREE.Clock(), v = new THREE.Vector3();
 const suave = t => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
 function quadro() {
   const dt = Math.min(relogio.getDelta(), 0.05), T = relogio.elapsedTime;
-  empilhadeiras.forEach(e => { moverNaRota(e, dt); e.garfo.position.y = 0.35 + (Math.sin(T * 0.6 + e.vel) * 0.5 + 0.5) * 0.5; });
+  empilhadeiras.forEach(e => { moverNaRota(e, dt); e.garfo.position.y = 0.35 + (Math.sin(T * 0.6 + e.vel) * 0.5 + 0.5) * 0.5; e.luz.material.emissiveIntensity = Math.sin(T * 8 + e.vel) > 0 ? 2.5 : 0.2; });
   andarilhos.forEach(a => {
     const d = a.a.distanceTo(a.b), ciclo = (T * a.vel + a.fase) % (2 * d + 6);
     let k, indo = true;
     if (ciclo < d) k = ciclo / d; else if (ciclo < d + 3) k = 1; else if (ciclo < 2 * d + 3) { k = 1 - (ciclo - d - 3) / d; indo = false; } else { k = 0; indo = false; }
     a.g.position.lerpVectors(a.a, a.b, k);
-    const andando = k > 0 && k < 1; a.g.position.y = andando ? Math.abs(Math.sin(T * 9 + a.fase)) * 0.05 : 0;
+    const andando = k > 0 && k < 1, passo = Math.sin(T * 7 * a.vel + a.fase);
+    a.g.position.y = andando ? Math.abs(passo) * 0.04 : 0;
+    const bal = andando ? passo * 0.65 : 0;
+    a.pernas[0].rotation.x = bal; a.pernas[1].rotation.x = -bal;
+    if (a.leva) { a.bracos[0].rotation.x = a.bracos[1].rotation.x = a.leva === 'caixa' ? -1.25 : -0.7; }
+    else if (andando) { a.bracos[0].rotation.x = -bal * 0.8; a.bracos[1].rotation.x = bal * 0.8; }
+    else { a.bracos[0].rotation.x = -0.9 + Math.sin(T * 3 + a.fase) * 0.35; a.bracos[1].rotation.x = -0.9 + Math.cos(T * 3.4 + a.fase) * 0.35; } // trabalhando parado
     v.subVectors(indo ? a.b : a.a, indo ? a.a : a.b); a.g.rotation.y = Math.atan2(v.x, v.z);
   });
   if (voo) { voo.t += dt / voo.dur; const k = suave(Math.min(1, voo.t)); camera.position.lerpVectors(voo.p0, voo.p1, k); controls.target.lerpVectors(voo.a0, voo.a1, k); if (voo.t >= 1) voo = null; }

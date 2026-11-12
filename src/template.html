@@ -28,7 +28,7 @@
     border: 1px solid #ffffff1f; font-size: 13px; font-weight: 600; text-align: left; white-space: nowrap; }
   .chip i { font-style: normal; width: 22px; height: 22px; border-radius: 50%; background: var(--laranja); color: #1a1205; display: grid; place-items: center; font-size: 12px; font-weight: 800; flex: none; }
   .chip.ativo { background: var(--laranja); color: #1a1205; } .chip.ativo i { background: #1a1205; color: var(--laranja); }
-  #painel { position: fixed; right: 16px; bottom: 16px; width: min(380px, calc(100vw - 32px)); padding: 18px 18px 14px; border-radius: 16px;
+  #painel { position: fixed; right: 16px; bottom: 16px; width: min(400px, calc(100vw - 32px)); padding: 18px 18px 14px; border-radius: 16px;
     background: #0f1b2df2; border: 1px solid #ffffff26; border-left: 5px solid var(--laranja); z-index: 6;
     transform: translateY(calc(100% + 24px)); transition: transform .35s ease; box-shadow: 0 12px 40px #0008; }
   #painel.aberto { transform: none; }
@@ -36,6 +36,10 @@
   #p-titulo { margin: 4px 28px 6px 0; font-size: 22px; font-weight: 800; line-height: 1.1; }
   #p-resumo { margin: 0 0 8px; font-weight: 700; font-size: 14px; }
   #p-texto { margin: 0; font-size: 14px; line-height: 1.5; color: var(--suave); }
+  #painel h3 { margin: 12px 0 6px; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--laranja); }
+  #p-conceitos { margin: 0; padding-left: 18px; font-size: 13px; line-height: 1.45; color: var(--texto); }
+  #p-conceitos li { margin-bottom: 4px; } #p-conceitos li::marker { color: var(--laranja); }
+  #painel { max-height: calc(100vh - 100px); overflow-y: auto; }
   #p-fechar { position: absolute; top: 10px; right: 10px; width: 32px; height: 32px; border-radius: 8px; background: transparent; font-size: 20px; color: var(--suave); }
   #tour { display: none; align-items: center; gap: 8px; margin-top: 12px; }
   .em-tour #tour { display: flex; }
@@ -53,7 +57,8 @@
     #lista { top: auto; left: 0; right: 0; bottom: 0; flex-direction: row; overflow-x: auto; padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
       background: linear-gradient(#0f1b2d00, #0f1b2df2 40%); scrollbar-width: none; }
     #lista::-webkit-scrollbar { display: none; }
-    #painel { right: 10px; left: 10px; width: auto; bottom: 62px; padding: 14px 14px 12px; }
+    #painel { right: 10px; left: 10px; width: auto; bottom: 62px; padding: 14px 14px 12px; max-height: 46vh; }
+    #p-conceitos { font-size: 12.5px; }
     #p-titulo { font-size: 18px; } #p-texto, #p-resumo { font-size: 13px; }
     #dica { bottom: 66px; font-size: 11.5px; }
     .rotulo { font-size: 10.5px; padding: 4px 8px; }
@@ -77,6 +82,8 @@
   <h2 id="p-titulo"></h2>
   <p id="p-resumo"></p>
   <p id="p-texto"></p>
+  <h3>Conceitos de logística</h3>
+  <ul id="p-conceitos"></ul>
   <div id="tour"><button id="t-ant" aria-label="Etapa anterior">‹</button><div class="trilho"><div id="barra"></div></div><button id="t-prox" aria-label="Próxima etapa">›</button></div>
 </aside>
 <div id="dica"><span class="mouse">Arraste para girar · Scroll para zoom · Botão direito para mover · Clique numa área</span><span class="toque">Arraste para girar · Pinça para zoom · Toque numa área</span></div>
