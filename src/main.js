@@ -48,7 +48,7 @@ const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xbfd9ee);
 scene.fog = new THREE.Fog(0xbfd9ee, 300, 800);
 
-const camera = new THREE.PerspectiveCamera(42, 1, 0.5, 1500);
+const camera = new THREE.PerspectiveCamera(42, 1, 0.3, 1500);
 const VISAO_GERAL = { pos: new THREE.Vector3(0, 52, 62), alvo: new THREE.Vector3(0, 0, 0) };
 camera.position.copy(VISAO_GERAL.pos);
 
@@ -493,6 +493,7 @@ ZONAS.forEach(z => {
 let voo = null, selecionada = null, tour = null;
 function voar(pos, alvo, dur = 1.3) { voo = { p0: camera.position.clone(), a0: controls.target.clone(), p1: pos.clone(), a1: alvo.clone(), t: 0, dur }; }
 function selecionar(id, doTour = false) {
+  if (andar) sairAndar();
   if (!doTour && tour) pararTour();
   const z = zonaPorId[id]; selecionada = z;
   const d = 13 + z.tam * 0.95;
@@ -504,6 +505,7 @@ function selecionar(id, doTour = false) {
   elPainel.classList.add('aberto'); $('dica').classList.add('oculta');
 }
 function visaoGeral() {
+  if (andar) sairAndar();
   if (tour) pararTour(); selecionada = null; voar(VISAO_GERAL.pos, VISAO_GERAL.alvo);
   ZONAS.forEach(o => { o.chip.classList.remove('ativo'); o.rotulo.classList.remove('ativo'); }); elPainel.classList.remove('aberto');
 }
@@ -515,7 +517,7 @@ function irEtapa(i) {
   tour.para = new THREE.Vector3(z.cx, 0.2, z.cz);
   selecionar(z.id, true);
 }
-function iniciarTour() { tour = { i: -1, t: 0 }; carga.visible = true; document.body.classList.add('em-tour'); $('btn-tour').textContent = '■ Parar tour'; irEtapa(0); }
+function iniciarTour() { if (andar) sairAndar(); tour = { i: -1, t: 0 }; carga.visible = true; document.body.classList.add('em-tour'); $('btn-tour').textContent = '■ Parar tour'; irEtapa(0); }
 function pararTour() { tour = null; carga.visible = false; document.body.classList.remove('em-tour'); $('btn-tour').textContent = '▶ Tour do fluxo'; $('barra').style.width = '0'; }
 $('btn-tour').onclick = () => tour ? pararTour() : iniciarTour();
 $('btn-geral').onclick = visaoGeral;
@@ -525,19 +527,57 @@ $('t-ant').onclick = () => tour && irEtapa((tour.i + FLUXO.length - 1) % FLUXO.l
 $('t-prox').onclick = () => tour && irEtapa((tour.i + 1) % FLUXO.length);
 controls.addEventListener('start', () => { voo = null; $('dica').classList.add('oculta'); });
 
+// ---------- Modo andar (primeira pessoa) ----------
+let andar = null; const teclas = new Set();
+const OBST = [[-16.55, -14.65], [-13.35, -11.45], [-10.15, -8.25], [-6.95, -5.05]].map(([a, b]) => [a, b, -13.9, 1.9]).concat([[-25.8, -22.7, -16.6, -4.5], [23.4, 26.6, -16.6, -4.5]]);
+function livreEm(x, z) { const r = 0.35; if (x < -29.4 || x > 29.4 || z < -17.4 || z > 13.5) return false; return !OBST.some(([x0, x1, z0, z1]) => x > x0 - r && x < x1 + r && z > z0 - r && z < z1 + r); }
+function entrarAndar() {
+  if (tour) pararTour(); voo = null; selecionada = null; elPainel.classList.remove('aberto');
+  ZONAS.forEach(o => { o.chip.classList.remove('ativo'); o.rotulo.classList.remove('ativo'); });
+  andar = { x: 0, z: 3.6, yaw: 0, pitch: -0.05, olhar: null, joy: null, mv: { x: 0, y: 0 } };
+  controls.enabled = false; camera.rotation.order = 'YXZ'; document.body.classList.add('andando'); $('btn-andar').textContent = '✕ Sair'; $('dica').classList.add('oculta'); ajustar();
+}
+function sairAndar() {
+  andar = null; controls.enabled = true; camera.rotation.order = 'XYZ'; document.body.classList.remove('andando'); $('btn-andar').textContent = '🚶 Andar'; $('joy').style.display = 'none'; ajustar();
+  camera.position.copy(VISAO_GERAL.pos); controls.target.copy(VISAO_GERAL.alvo);
+}
+$('btn-andar').onclick = () => andar ? (sairAndar()) : entrarAndar();
+window.addEventListener('keydown', e => { teclas.add(e.key.toLowerCase()); if (andar && e.key.startsWith('Arrow')) e.preventDefault(); });
+window.addEventListener('keyup', e => teclas.delete(e.key.toLowerCase()));
+window.addEventListener('blur', () => teclas.clear());
+canvas.addEventListener('pointerdown', e => { if (!andar) return; canvas.setPointerCapture(e.pointerId);
+  if (e.pointerType === 'touch' && e.clientX < window.innerWidth / 2 && !andar.joy) { andar.joy = { id: e.pointerId, x: e.clientX, y: e.clientY }; const j = $('joy'); j.style.display = 'block'; j.style.left = e.clientX + 'px'; j.style.top = e.clientY + 'px'; $('joy-p').style.transform = 'translate(-50%,-50%)'; }
+  else if (!andar.olhar) andar.olhar = { id: e.pointerId, x: e.clientX, y: e.clientY }; });
+canvas.addEventListener('pointermove', e => { if (!andar) return;
+  if (andar.joy && e.pointerId === andar.joy.id) { let dx = (e.clientX - andar.joy.x) / 50, dy = (e.clientY - andar.joy.y) / 50; const l = Math.hypot(dx, dy); if (l > 1) { dx /= l; dy /= l; } andar.mv = { x: dx, y: dy }; $('joy-p').style.transform = `translate(-50%,-50%) translate(${dx * 40}px,${dy * 40}px)`; }
+  else if (andar.olhar && e.pointerId === andar.olhar.id) { andar.yaw -= (e.clientX - andar.olhar.x) * 0.005; andar.pitch = Math.max(-1.2, Math.min(1.2, andar.pitch - (e.clientY - andar.olhar.y) * 0.004)); andar.olhar.x = e.clientX; andar.olhar.y = e.clientY; } });
+const soltar = e => { if (!andar) return; if (andar.joy && e.pointerId === andar.joy.id) { andar.joy = null; andar.mv = { x: 0, y: 0 }; $('joy').style.display = 'none'; } if (andar.olhar && e.pointerId === andar.olhar.id) andar.olhar = null; };
+canvas.addEventListener('pointerup', soltar); canvas.addEventListener('pointercancel', soltar);
+function atualizarAndar(dt, T) {
+  const t = k => teclas.has(k) ? 1 : 0;
+  let fr = t('w') + t('arrowup') - t('s') - t('arrowdown') - andar.mv.y, la = t('d') - t('a') + andar.mv.x;
+  andar.yaw += (t('arrowleft') + t('q') - t('arrowright') - t('e')) * dt * 1.8;
+  const l = Math.hypot(fr, la); if (l > 1) { fr /= l; la /= l; }
+  const v = (teclas.has('shift') ? 7 : 3.6) * dt, sn = Math.sin(andar.yaw), cs = Math.cos(andar.yaw);
+  const nx = andar.x + (-sn * fr + cs * la) * v, nz = andar.z + (-cs * fr - sn * la) * v;
+  if (livreEm(nx, andar.z)) andar.x = nx; if (livreEm(andar.x, nz)) andar.z = nz;
+  camera.position.set(andar.x, 1.68 + (l > 0.05 ? Math.sin(T * 9) * 0.04 : 0), andar.z); camera.rotation.set(andar.pitch, andar.yaw, 0);
+}
+
 // clique / toque nas áreas
 const raio = new THREE.Raycaster(), pt = new THREE.Vector2(); let baixo = null;
 canvas.addEventListener('pointerdown', e => { baixo = { x: e.clientX, y: e.clientY, t: performance.now() }; });
 canvas.addEventListener('pointerup', e => {
+  if (andar) return;
   if (!baixo || Math.hypot(e.clientX - baixo.x, e.clientY - baixo.y) > 6 || performance.now() - baixo.t > 500) return;
   const r = canvas.getBoundingClientRect(); pt.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
   raio.setFromCamera(pt, camera); const h = raio.intersectObjects(alvos)[0]; if (h) selecionar(h.object.userData.zona.id);
 });
-window.addEventListener('keydown', e => { if (e.key === 'Escape') visaoGeral(); if (tour && e.key === 'ArrowRight') $('t-prox').onclick(); if (tour && e.key === 'ArrowLeft') $('t-ant').onclick(); });
+window.addEventListener('keydown', e => { if (e.key === 'Escape') { visaoGeral(); } if (tour && e.key === 'ArrowRight') $('t-prox').onclick(); if (tour && e.key === 'ArrowLeft') $('t-ant').onclick(); });
 
 function ajustar() {
   const w = canvas.clientWidth, h = canvas.clientHeight; renderer.setSize(w, h, false); camera.aspect = w / h;
-  camera.fov = w < h ? 60 : 42; camera.updateProjectionMatrix();
+  camera.fov = andar ? (w < h ? 85 : 70) : (w < h ? 60 : 42); camera.updateProjectionMatrix();
 }
 window.addEventListener('resize', ajustar); ajustar();
 
@@ -563,7 +603,7 @@ function quadro() {
     v.subVectors(indo ? a.b : a.a, indo ? a.a : a.b); a.g.rotation.y = Math.atan2(v.x, v.z);
   });
   transito.forEach(c => { c.p = (c.p + c.vel * dt) % 520; const q = -260 + c.p; c.g.position.set(c.dx ? c.dx * q : c.fixo, 0, c.dz ? c.dz * q : c.fixo); });
-  const longe = camera.position.distanceTo(controls.target) > 110; marcos.forEach(m => m.visible = longe); elRotulos.style.opacity = longe ? 0 : 1;
+  const longe = !andar && camera.position.distanceTo(controls.target) > 110; marcos.forEach(m => m.visible = longe); elRotulos.style.opacity = longe ? 0 : 1;
   if (voo) { voo.t += dt / voo.dur; const k = suave(Math.min(1, voo.t)); camera.position.lerpVectors(voo.p0, voo.p1, k); controls.target.lerpVectors(voo.a0, voo.a1, k); if (voo.t >= 1) voo = null; }
   destaque.material.opacity = selecionada ? 0.16 + Math.sin(T * 3) * 0.07 : 0;
   if (tour) {
@@ -572,7 +612,7 @@ function quadro() {
     $('barra').style.width = Math.min(100, tour.t / DUR_ETAPA * 100) + '%';
     if (tour.t >= DUR_ETAPA) { if (tour.i + 1 < FLUXO.length) irEtapa(tour.i + 1); else { pararTour(); visaoGeral(); } }
   }
-  controls.update();
+  if (andar) atualizarAndar(dt, T); else controls.update();
   // rótulos HTML
   const w = canvas.clientWidth, h = canvas.clientHeight;
   ZONAS.forEach(z => {
@@ -586,4 +626,4 @@ function quadro() {
 }
 quadro();
 document.body.classList.add('pronto');
-window.__cd = { selecionar, iniciarTour, visaoGeral };
+window.__cd = { selecionar, iniciarTour, visaoGeral, entrarAndar };
