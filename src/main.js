@@ -527,6 +527,40 @@ $('t-ant').onclick = () => tour && irEtapa((tour.i + FLUXO.length - 1) % FLUXO.l
 $('t-prox').onclick = () => tour && irEtapa((tour.i + 1) % FLUXO.length);
 controls.addEventListener('start', () => { voo = null; $('dica').classList.add('oculta'); });
 
+// ---------- Teto de galpão (estrutura aparente, só no modo andar) ----------
+const teto = new THREE.Group(); teto.visible = false; scene.add(teto);
+{
+  const aco = mat(0x4a5058, { roughness: 0.6, metalness: 0.5 }), telha = new THREE.MeshStandardMaterial({ color: 0xaeb5bb, roughness: 0.55, metalness: 0.4, side: THREE.DoubleSide });
+  const Z0 = -18, Z1 = 14, ZC = -2, YB = 6.3, YC = 9.3, yTopo = z => YB + (YC - YB) * (1 - Math.abs(z - ZC) / 16);
+  const A = new THREE.Vector3(), B = new THREE.Vector3();
+  function barra(x0, y0, z0, x1, y1, z1, esp = 0.14, m = aco) { A.set(x0, y0, z0); B.set(x1, y1, z1); const b = new THREE.Mesh(geoCaixa, m); b.scale.set(esp, esp, A.distanceTo(B)); b.position.copy(A).add(B).multiplyScalar(0.5); b.lookAt(B); teto.add(b); return b; }
+  for (let x = -30; x <= 30; x += 6) {                      // tesouras metálicas
+    barra(x, YB, Z0, x, YB, Z1, 0.2); barra(x, YB, Z0, x, YC, ZC, 0.2); barra(x, YC, ZC, x, YB, Z1, 0.2);
+    for (let z = Z0 + 4; z < Z1; z += 4) { barra(x, YB, z, x, yTopo(z), z, 0.1); const zn = z < ZC ? z - 4 : z + 4; if (z !== ZC) barra(x, yTopo(z), z, x, YB, zn, 0.09); }
+    barra(x, 0, Z0 + 0.35, x, YB, Z0 + 0.35, 0.28); barra(x, 0, Z1 - 0.35, x, YB, Z1 - 0.35, 0.28);   // pilares
+  }
+  for (let z = Z0; z <= Z1; z += 2) barra(-30, yTopo(z) + 0.14, z, 30, yTopo(z) + 0.14, z, 0.1);        // terças
+  for (let x = -27; x < 30; x += 12) for (const [za, zb] of [[Z0, ZC], [ZC, Z1]]) { barra(x - 3, yTopo(za) + 0.1, za, x + 3, yTopo(zb) + 0.1, zb, 0.05); barra(x + 3, yTopo(za) + 0.1, za, x - 3, yTopo(zb) + 0.1, zb, 0.05); } // contraventamento
+  const comp = Math.hypot(16, YC - YB), inc = Math.atan2(YC - YB, 16);
+  for (const [zc, r] of [[(Z0 + ZC) / 2, -inc], [(ZC + Z1) / 2, inc]]) {                                   // telhas metálicas + telhas translúcidas
+    const p = new THREE.Mesh(new THREE.PlaneGeometry(60.6, comp + 0.3), telha); p.rotation.x = Math.PI / 2 + r; p.position.set(0, (YB + YC) / 2 + 0.25, zc); teto.add(p);
+    for (let x = -24; x <= 24; x += 12) { const c = new THREE.Mesh(new THREE.PlaneGeometry(1.6, comp * 0.7), new THREE.MeshBasicMaterial({ color: 0xf4fbff, side: THREE.DoubleSide })); c.rotation.x = Math.PI / 2 + r; c.position.set(x, (YB + YC) / 2 + 0.2, zc); teto.add(c); }
+    for (let x = -30; x <= 30; x += 0.75) { const n = new THREE.Mesh(geoCaixa, mat(0x8d949b, { roughness: 0.6, metalness: 0.4 })); n.scale.set(0.06, 0.05, comp); n.rotation.x = r; n.position.set(x, (YB + YC) / 2 + 0.21, zc); teto.add(n); } // ondulação da telha
+  }
+  // fechamento lateral em telha e oitões
+  const fech = mat(0xc2c7cc, { roughness: 0.6, metalness: 0.3 });
+  for (const [w, d, x, z] of [[60.8, 0.15, 0, Z0], [60.8, 0.15, 0, Z1], [0.15, 32, -30, -2], [0.15, 32, 30, -2]]) { const b = new THREE.Mesh(geoCaixa, fech); b.scale.set(w, 1.2, d); b.position.set(x, 5.75, z); teto.add(b); }
+  const tri = new THREE.Shape(); tri.moveTo(Z0, YB); tri.lineTo(Z1, YB); tri.lineTo(ZC, YC + 0.3); tri.closePath();
+  for (const x of [-30, 30]) { const o = new THREE.Mesh(new THREE.ShapeGeometry(tri), new THREE.MeshStandardMaterial({ color: 0xc2c7cc, roughness: 0.6, metalness: 0.3, side: THREE.DoubleSide })); o.rotation.y = -Math.PI / 2; o.position.x = x; teto.add(o); }
+  // instalações aparentes: eletrocalha, tubulação de incêndio (vermelha) e duto
+  barra(-30, 6.05, -5.5, 30, 6.05, -5.5, 0.3, mat(0x9aa0a6, { metalness: 0.5, roughness: 0.5 })); barra(-30, 6.05, 9, 30, 6.05, 9, 0.3, mat(0x9aa0a6, { metalness: 0.5, roughness: 0.5 }));
+  for (const z of [-12, 3]) { const t = new THREE.Mesh(geoCil, mat(0xd2231f)); t.scale.set(0.16, 60, 0.16); t.rotation.z = Math.PI / 2; t.position.set(0, 6.0, z); teto.add(t); for (let x = -27; x <= 27; x += 6) barra(x, 6.0, z, x, 5.8, z, 0.05, mat(0xd2231f)); }
+  { const d = new THREE.Mesh(geoCil, mat(0xb9c0c6, { metalness: 0.6, roughness: 0.4 })); d.scale.set(0.7, 44, 0.7); d.rotation.z = Math.PI / 2; d.position.set(4, 6.9, -9); teto.add(d); }
+  // luminárias industriais pendentes
+  const lum = new THREE.MeshBasicMaterial({ color: 0xfff6d8 });
+  for (let x = -24; x <= 24; x += 12) for (const z of [-12, -2, 8]) { barra(x, yTopo(z), z, x, 5.9, z, 0.03); const c = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.45, 0.35, 12), mat(0x30353b, { metalness: 0.6 })); c.position.set(x, 5.85, z); teto.add(c); const l = new THREE.Mesh(new THREE.CircleGeometry(0.42, 12), lum); l.rotation.x = Math.PI / 2; l.position.set(x, 5.67, z); teto.add(l); }
+}
+
 // ---------- Modo andar (primeira pessoa) ----------
 let andar = null; const teclas = new Set();
 const OBST = [[-16.55, -14.65], [-13.35, -11.45], [-10.15, -8.25], [-6.95, -5.05]].map(([a, b]) => [a, b, -13.9, 1.9]).concat([[-25.8, -22.7, -16.6, -4.5], [23.4, 26.6, -16.6, -4.5]]);
@@ -535,10 +569,10 @@ function entrarAndar() {
   if (tour) pararTour(); voo = null; selecionada = null; elPainel.classList.remove('aberto');
   ZONAS.forEach(o => { o.chip.classList.remove('ativo'); o.rotulo.classList.remove('ativo'); });
   andar = { x: 0, z: 3.6, yaw: 0, pitch: -0.05, olhar: null, joy: null, mv: { x: 0, y: 0 } };
-  controls.enabled = false; camera.rotation.order = 'YXZ'; document.body.classList.add('andando'); $('btn-andar').textContent = '✕ Sair'; $('dica').classList.add('oculta'); ajustar();
+  teto.visible = true; controls.enabled = false; camera.rotation.order = 'YXZ'; document.body.classList.add('andando'); $('btn-andar').textContent = '✕ Sair'; $('dica').classList.add('oculta'); ajustar();
 }
 function sairAndar() {
-  andar = null; controls.enabled = true; camera.rotation.order = 'XYZ'; document.body.classList.remove('andando'); $('btn-andar').textContent = '🚶 Andar'; $('joy').style.display = 'none'; ajustar();
+  andar = null; teto.visible = false; controls.enabled = true; camera.rotation.order = 'XYZ'; document.body.classList.remove('andando'); $('btn-andar').textContent = '🚶 Andar'; $('joy').style.display = 'none'; ajustar();
   camera.position.copy(VISAO_GERAL.pos); controls.target.copy(VISAO_GERAL.alvo);
 }
 $('btn-andar').onclick = () => andar ? (sairAndar()) : entrarAndar();
